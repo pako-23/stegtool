@@ -1,0 +1,69 @@
+* Environment Setup
+As usual, the first step consists of installing and setting up a
+development environment for C. We will install a C compiler, an
+editor, a build automation tool (CMake), a debugger, and a software
+version control client (Git). Some of these names might sound new, but
+we will explore each tool in future tutorials.
+
+** Environment Setup on Linux
+On a Linux distribution, you can install most of the described tools
+via a package manager. For example, on Debian-based distributions
+you can install them with the following commands:
+
+#+BEGIN_SRC shell
+  sudo apt-get update
+  sudo apt-get install build-essential cmake gdb git
+#+END_SRC
+
+** Environment Setup on MacOS
+By default, MacOS does not provide a package manager. Homebrew is a
+very popular solution. To install Homebrew, open a MacOS Terminal,
+and paste the following command:
+
+#+BEGIN_SRC shell
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#+END_SRC
+
+Note that after this command finishes running, it might ask you to
+execute some additional commands in your terminal. On MacOS, some of
+the required tools are already installed. In practice, you will only
+have to install CMake as follows:
+
+#+BEGIN_SRC shell
+  brew update
+  brew install gcc gdb cmake
+#+END_SRC
+
+** Environment Setup on Windows
+On Windows, you can install a C compiler via MinGW which you can
+download from [[https://github.com/skeeto/w64devkit/releases][here]]. Then, you can install CMake by running its
+installer that you can download from [[https://cmake.org/download/][here]].
+
+** Installing a Text Editor
+Finally, we will describe how to install an editor. An editor is
+program that allows to edit a plain text file. In practice, you will
+need an editor to write any program (after all a program is a text
+file that is then compiled or interpreted, but more about this will
+come in future tutorials). A very popular text editor is Visual Studio
+Code.  You can download the installer for Visual Studio Code from
+[[https://code.visualstudio.com/][here]]. Alternatively, on MacOS you can install it via the Homebrew
+package manager as follows:
+
+#+BEGIN_SRC shell
+  brew install --cask visual-studio-code
+#+END_SRC
+
+Also, on Linux distros, you can install it via a package manager.  For
+example, on Debian-based distributions you can install it with the
+following commands:
+
+#+BEGIN_SRC shell
+  sudo apt-get install wget gpg
+  wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+  sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+  echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+  rm -f packages.microsoft.gpg
+  sudo apt install apt-transport-https
+  sudo apt update
+  sudo apt install code
+#+END_SRC
