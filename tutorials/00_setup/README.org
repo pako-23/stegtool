@@ -1,11 +1,12 @@
-* Environment Setup
+#+TITLE: Environment Setup
+
 As usual, the first step consists of installing and setting up a
 development environment for C. We will install a C compiler, an
-editor, a build automation tool (CMake), a debugger, and a software
-version control client (Git). Some of these names might sound new, but
-we will explore each tool in future tutorials.
+editor, a build automation tool (CMake), a debugger, and a source
+control tool (Git). Some of these names might sound new, but we will
+explore each tool in future tutorials.
 
-** Environment Setup on Linux
+* Environment Setup on Linux
 On a Linux distribution, you can install most of the described tools
 via a package manager. For example, on Debian-based distributions
 you can install them with the following commands:
@@ -15,7 +16,7 @@ you can install them with the following commands:
   sudo apt-get install build-essential cmake gdb git
 #+END_SRC
 
-** Environment Setup on MacOS
+* Environment Setup on MacOS
 By default, MacOS does not provide a package manager. Homebrew is a
 very popular solution. To install Homebrew, open a MacOS Terminal,
 and paste the following command:
@@ -34,12 +35,12 @@ have to install CMake as follows:
   brew install gcc gdb cmake
 #+END_SRC
 
-** Environment Setup on Windows
+* Environment Setup on Windows
 On Windows, you can install a C compiler via MinGW which you can
 download from [[https://github.com/skeeto/w64devkit/releases][here]]. Then, you can install CMake by running its
 installer that you can download from [[https://cmake.org/download/][here]].
 
-** Installing a Text Editor
+* Installing a Text Editor
 Finally, we will describe how to install an editor. An editor is
 program that allows to edit a plain text file. In practice, you will
 need an editor to write any program (after all a program is a text

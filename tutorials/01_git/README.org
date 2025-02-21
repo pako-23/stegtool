@@ -1,0 +1,184 @@
+#+TITLE: Source Control
+
+These notes aim at giving an introduction to source control and Git.
+Most of the concepts described in these notes are taken from [[https://git-scm.com/book/en/v2][/Pro
+Git/]]. A software project consists of a collection of files which
+compose a program. However, were do we usually keep all the files
+which are part of a software project? In short, we commonly use a
+source control tool. Source control refers at a way of tracking the a
+set of files and the changes made on those over time. In practice, a
+source control tool also allows to track the history of a file and the
+author of each change. Additionally, it allows to roll back to a
+previous version of a file by undoing some changes. That means that if
+you introduce some bugs in a newer version of the software you are
+developing, it also allows to go back to an older working version.
+There exist multiple source control tools, but Git has emerged as the
+most used. In fact, many open source projects use Git for source
+control (the Linux kernel is versioned using Git, after all they have
+been both developed by Linus Torvalds). Therefore, Git is what we will
+be using for source version.
+
+* Git's Architecture
+This section will provide an overview of the architecture of Git.  A
+important difference of Git compared to other source control tools is
+in the way it looks at data. Many source control tools are delta-based
+versioning systems. Namely, they think about data as a set of files and
+they store the change made to each file over time.  Git thinks of the
+data it stores as a series of snapshots of a file system (after all
+Linus Torvalds is an OS developer). In Git, every time you commit a
+change for a project it will take a picture (a snapshot) of the files
+that changed.  The main benefits about this approach to data modeling
+is in the way Git handles branching (do not worry we will discuss what
+branching is later in this document). In Git, most operations happen
+in local, so they do not require a network connection. This is a big
+advantage over other source control systems because it allows to do
+many operations while you are offline. For example, while you are on a
+plane you can still make many operations such as committing or
+examining the history of changes, and then sync them when you will
+have a Internet connection.
+
+A Git project is organized in the following three areas:
+
+- The /working tree/ is a single checkout of one version of the
+  project. These files are pulled out of the compressed database in
+  the Git directory and placed on disk for you to use or modify. In practice,
+  it consists of the local files that you edit on your machine.
+
+- The /staging area/ is a file that stores information about what will
+  go into your next commit. Its technical name in Git parlance is the
+  “index”, but the phrase “staging area” works just as well. Usually,
+  it is a file named ~index~ contained in the ~.git~ of you find in
+  the local copy of a project
+
+- The /repository/ is where Git stores the metadata and object
+  database for your project. This is the most important part of Git,
+  and it is what is copied when you clone a repository from another
+  computer. Usually, it consists of the content of the ~.git~
+  directory you find on the local copy of a project.
+
+As shown in the following picture, the basic Git workflow goes
+something like this:
+
+1. You modify files in your working tree.
+
+2. You selectively stage just those changes you want to be part of
+   your next commit, which adds only those changes to the staging
+   area.
+
+3. You do a commit, which takes the files as they are in the staging
+   area and stores that snapshot permanently to your Git directory.
+
+#+CAPTION: Git areas, and usual workflow.
+[[./git_areas.png]]
+
+When you modify the files within a project, they go through the
+following stages as shown in the following picture:
+
+- A file is /untracked/ when Git sees a file in the working directory
+  for which it does not have any snapshot yet. Git will not start
+  including it in your commit snapshots until you explicitly tell it
+  to do so. It does this so you do not accidentally begin including
+  files that you did not mean to include.
+
+- When you edit a file that Git is tracking, it goes into the
+  /modified/ state.
+
+- After you have finished editing a file, you can add the changes to
+  the stage area, and the file will go to the /staged/ status.
+
+- Finally, after you commit you changes from the stage area, the file
+  will be added to the repository area, and it will go back to
+  /unmodified/ state. The unmodified state refers to the fact that
+  there are no changes compared to the last version of the file.
+
+#+CAPTION: Possible states of a file in Git.
+[[./file_status.png]]
+
+
+The last important concept to introduce is branching.
+Branching means you diverge from the main line of development and
+continue to do work without messing with that main line. In many other
+source control systems, this is an expensive process. In fact, in
+delta-based source control systems, branching often requires creating
+a new copy of your source code directory, which can be expensive for
+large projects. In Git, a commit is simply a pointer to a snapshot.
+Hence, a branch in Git a branch can be represeted simply as a pointer
+to some commit, making it extremely lightweight compared to other systems.
+
+* Getting Started with the Git Command Line
+In this section, we will go through some of the commands offered by
+the git command line tool. To get started, open a command
+line. Usually, the first step consists of obtaining a repository. You
+can create your own repository via the ~git init~ command, but we will
+not be discussing this option too much in here. A popular way way of
+creating a repository is by using GitHub. GitHub is a popular online
+platform that allows to create a repository and host it for you,
+allowing to share it with other developers. Note that this is not the
+only way, you could also host a repository on a server you own and
+create it via the ~git init~ command.  We are going to describe GitHub
+only because it is easier.  GitHub offers a Web-based UI which allows
+you to create a repository in an intuitive way.  Another approach
+consists of getting a copy of an already existing repository. You can
+obtain a copy of a repository via the ~git clone~ command which has
+the following syntax:
+
+#+BEGIN_SRC shell
+  git clone <repository>
+#+END_SRC
+
+Where ~repository~ refers to the repository link which you can obtain
+on the repository page on GitHub.  Note that the command will create a
+directory named ~repository~ on your machine containing a ~.git~ directory
+which is the actual Git repository.
+
+When developing a new feature, the usual workflow consists of creating
+a new branch were all the code for your new feature will be contained.
+You can create a new branch with the following command:
+
+#+BEGIN_SRC shell
+  git checkout -b <branch-name>
+#+END_SRC
+
+After issuing this command, you will be automatically switched to the
+new branch.  Now, you can start editing your project.
+After you have finished editing, you can check the status of all the
+files in the local working tree by issuing a ~git status~ command.
+The next step consists of adding these files to the index.
+You can add a single file to the index via the following command:
+
+#+BEGIN_SRC shell
+  git add <filename>
+#+END_SRC
+
+Alternatively, you might want to add all the files you have changed at once
+with the following command:
+
+#+BEGIN_SRC shell
+  git add --all
+#+END_SRC
+
+Note that now the output of the ~git status~ command should have
+changed since these files moved to the staged status.  Finally, we are
+ready to add the changes to the repository (you can think of it as
+taking a snapshot of the project) via the following command:
+
+#+BEGIN_SRC shell
+  git commit -m '<message>'
+#+END_SRC
+
+The ~message~ refers to some short text describing what did you do in
+this new version of the software.  So far, all these changes have
+happened in local. Namely, the copy of the repository hosted by GitHub
+does not know anything about what you did. You can try to execute
+these commands without an Internet connection, and they will run
+without any issue (a part from the ~git clone~ command obviously,
+why?).  To sync our copy of the repository with GitHub, we can use the
+following command:
+
+#+BEGIN_SRC shell
+  git push
+#+END_SRC
+
+* Exercises
+** Exercise 1
+Try to clone this repository on your local machine.
