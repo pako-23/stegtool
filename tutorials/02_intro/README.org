@@ -1,0 +1,112 @@
+#+TITLE: Introduction to C
+
+These notes provide a very basic introduction to C, and we will be
+writing our first program in C. For all languages you will be
+learning, there is this tradition of writing this program that simply
+prints /Hello world!/.  In C, this program looks as follows:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      printf("Hello world!\n");
+  }
+#+END_SRC
+
+You can write this program by creating a text file (usually its name
+is terminated by the ~.c~ extension), and adding the following code in
+it. For now this program contains many obscure item such as ~#include
+<stdio.h>~, ~printf~, or ~main~. Do not worry we will cover those in
+future notes.  This program is readable for humans, but your computer
+does not understand it. In fact, your computer can only execute
+programs in binary, ie written in 0s and 1s. Hence, we need some sort
+of translator from the C language to the 0s and 1s language
+understands.  To solve this problem there are two approaches. The
+first one is interpretation. Interpretation consists of having another
+program (the interpreter) which goes through every line of your
+program and executes it. An example of languages using an interpreter
+is Javascript. In Javascript, you write some scripts which are then
+executed line by line by and interpreter which is within your browser.
+In reality, for performance reasons, this is not completely true, but
+let's keep things intuitive.  The other approach consists of
+compilation. In compilation, you have a program (the compiler) that
+takes your program and translates it into another program that the
+machine can understand. C is a compiled language, so you have a
+compiler that takes your program and translates it into a binary. In
+fact, you installed the compiler in the environment setup (GCC was the
+compiler for C). Now, let's try to compile our first program.
+Assuming that you saved the program in a file named ~hello.c~,
+you can compile it as follows:
+
+#+BEGIN_SRC shell
+  gcc hello.c -o hello
+#+END_SRC
+
+The ~-o~ parameter simply states what should be the name of the output
+binary.  In fact, if you look into the directory you should be able to
+see a file named ~hello~. ~hello~ is our binary program that the
+machine understand.
+
+Finally, you can run the program on Linux and MacOS as follows:
+
+#+BEGIN_SRC shell
+  ./hello
+#+END_SRC
+
+And, on Windows as follows:
+
+#+BEGIN_SRC powershell
+  .\hello
+#+END_SRC
+
+The ~printf~ function (do not worry we will describe what a function
+is in future notes), included by the ~#include <stdio.h>~ statement,
+is the one responsible for printing the message.  In the message, the
+~\n~ character simply allows to go to the next line after printing the
+message (try removing it, what happens?).  It is a really special
+function because it also allows to print some formatted output.  For
+example, let's try to print some formatted output:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      /*
+       ,* This is a comment in C, and it allows to write some text that
+       ,* the compiler should ignore. These two statemes declare two
+       ,* variables (we will also look at variables in more detail): one
+       ,* is a char pointer (think of it as a word), and the other one is
+       ,* a "real" number.
+       ,*/
+      const char *name = "Marco";
+      float height = 1.80;
+
+      printf("Hello, I am %s and I am %f meters.\n", name, height);
+  }
+#+END_SRC
+
+~%s~ and ~%f~ are the ones responsible for the formatting. In fact,
+after providing the formatting you can specify one parameter for each
+formatting item (it is not really true you could also give more and
+some secuirty vulnerabilities exploit this thing. If you are into
+hacking, maybe we can discuss about it some day). ~%s~ means that you
+want to place a word there which is ~name~, and ~%f~ indicates that
+you are placing a real number which is ~height~. You should specify
+the values to place in the formatting items in the same order as they
+appear in the formatting string (the first parameter to the ~printf~
+function.
+
+
+* Exercise
+** Exercise 1
+Try to write, compile and execute the /Hello world!/ program on your
+machine.
+
+** Exercise 2
+Try to write a small program that converts a temperature from Celsius
+to Fahrenheit, and outputs the conversion. For now, you can add the
+number to convert in a variable (we will look at how to read user
+input in future notes).  We have not seen how to perform arithmetic
+yet, but it is uses the usual rules of math.
