@@ -1,8 +1,8 @@
 #+TITLE: Source Control
 
 These notes aim at giving an introduction to source control and Git.
-Most of the concepts described in these notes are taken from [[https://git-scm.com/book/en/v2][/Pro
-Git/]]. A software project consists of a collection of files which
+Most of the concepts described in these notes are taken from /[[https://git-scm.com/book/en/v2][Pro
+Git]]./ A software project consists of a collection of files which
 compose a program. However, were do we usually keep all the files
 which are part of a software project? In short, we commonly use a
 source control tool. Source control refers at a way of tracking the a
@@ -69,6 +69,7 @@ something like this:
    area and stores that snapshot permanently to your Git directory.
 
 #+CAPTION: Git areas, and usual workflow.
+#+ATTR_HTML: :align center
 [[./git_areas.png]]
 
 When you modify the files within a project, they go through the
@@ -92,6 +93,7 @@ following stages as shown in the following picture:
   there are no changes compared to the last version of the file.
 
 #+CAPTION: Possible states of a file in Git.
+#+ATTR_HTML: :align center
 [[./file_status.png]]
 
 
