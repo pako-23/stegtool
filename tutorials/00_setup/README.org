@@ -36,9 +36,10 @@ have to install CMake as follows:
 #+END_SRC
 
 * Environment Setup on Windows
-On Windows, you can install a C compiler via MinGW which you can
-download from [[https://github.com/skeeto/w64devkit/releases][here]]. Then, you can install CMake by running its
-installer that you can download from [[https://cmake.org/download/][here]].
+On Windows, you can install a C compiler via MinGW. You can install
+MinGW by following the instructions described [[https://code.visualstudio.com/docs/cpp/config-mingw#_installing-the-mingww64-toolchain][here]]. Then, you can
+install CMake by running its installer that you can download from
+[[https://cmake.org/download/][here]].
 
 * Installing a Text Editor
 Finally, we will describe how to install an editor. An editor is
