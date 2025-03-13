@@ -1,0 +1,212 @@
+#+TITLE: Data Types, Variables, and Operators
+
+These notes cover some basic concepts that appear in almost any
+programming languages, and how they work for the C programming
+language.  In fact, many programming have much in common in their
+core, so most of the concepts presented here apply to most programming
+languages.
+
+* Data Types
+Every value in C has a specific data type, as in most programming
+languages.  A data type is an attribute of some value telling how to
+interpret it and how to work with that type.  In C, the basic data
+types are the following:
+
+ - ~char~ a value with the size of a single byte, capable of holding
+   one character in the local character set.
+ - ~int~ represent an integer number whose size reflects the size of
+   integers on the host machine. It means that its size varies
+   depending on the target architecture (ie the machine you use as
+   target when compiling a C program). For instance, nowadays most
+   architectures are 64-bit architectures, so an ~int~ will be 4 bytes
+   long. However, there exist older 16-bit architectures on which
+   ~int~ were 2 bytes long.
+ - ~float~ represents a real number with single-precision floating
+   point, ie a 32-bit real number.
+ - ~double~ represents a real number with double-precision floating
+   point, ie a 64-bit real number.
+
+In addition, there are some qualifiers that can be supplied to some of
+these basic types.  For instance, you can change the size of an
+integer using the ~short~ and ~long~ quantifiers. If you use these two
+quantifiers, you can also omit ~int~. ~short~ is often a 16 bits long
+integer. ~long~ are at least 32 bits integers (in practice on modern
+architectures they are 64 bits integers).
+
+Also, the ~signed~ and ~unsigned~ quantifiers can be supplied to
+~char~ or ~int~.  ~signed~ allows to represent negative numbers, while
+~unsigned~ only represent positive numbers. But why would someone use
+~unsigned~ over ~signed~?  Well, since the size of an ~int~ is fixed
+for a given architecture, ~unsigned~ integers can represent more
+numeric values.
+
+* Variables
+A variable is a piece of memory storing some value. The size of the
+memory block reserved for a variable is determined by its data
+type. The following code snipped shows how you can declare a variable
+of type integer.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int x  = 5;
+      printf("x = %d\n", x);
+      x = 6;
+      printf("x = %d\n", x);
+  }
+#+END_SRC
+
+Also, variables are mutable. Mutability means that you are able to
+change their value, as shown in the code above. However, what if we do
+not want to allow someone to change their value? In that case, we are
+referring to a constant. A constant can be declared by using the
+~const~ qualifier.  For example, the following code shows how to
+declare a constant, but it will fail to compile. Why?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      const int x  = 5;
+      printf("x = %d\n", x);
+      x = 6;
+      printf("x = %d\n", x);
+  }
+#+END_SRC
+
+Before using any variable you should declare it. A declaration
+specifies the type and and the name of a variable. For example, a
+variable declaration look as follows:
+
+#+BEGIN_SRC c
+  int x;
+#+END_SRC
+
+In a declaration, a variable can also be initialized. The
+initialization is done by adding an equal sign and an expression that
+serves as an initializer, as in the following example:
+
+#+BEGIN_SRC c
+  int x = 10;
+#+END_SRC
+
+Unlike other languages, not initializing a variable with automatic
+storage is undefined behavior, and you cannot rely on any specific
+value being set. However, the behavior is defined for external and
+static storage variables. An initialzation is different from an
+assignment. The main difference is in the fact that an assignment
+changes the value of a variable.  Also, the language imposes some
+limits on the names a variable can take.  Names are made up of
+letters, digits and underscore, with the first character being a
+letter or underscore.
+
+* Operators
+An operator defines an action to perform on some data. A first set of
+operators includes the binary aritmetic operators ~+~, ~-~, ~*~, ~/~,
+and ~%~. They allow to define the classic arithmetic operations.  The
+~%~ operator allows to compute the reminder of the integer division of
+the two operands. Then, a second set includes the logical operators
+~>~, ~>=~, ~<~, ~<=~, ~==~, and ~!=~. The logical operators allow to
+compare two values. They are mostly used when taking decisions on
+instructions that change the control flow of a program as we will see
+in future notes.
+
+The C language also provides some operators that allow to manipulate
+the binary representation of an integral type (~char~, ~short~, ~int~,
+~long~). These operators are often referred as bitwise operators, and
+they are the following:
+
+ - ~&~ allows to compute the bitwise AND. In practice, it is a binary
+   operator which computes the AND result for each bit of two number.
+ - ~|~ allows to compute the bitwise OR. In practice, it is a binary
+   operator which computes the OR result for each bit of two number.
+ - ~^~ allows to compute the bitwise XOR. In practice, it is a binary
+   operator which computes the XOR result for each bit of two number.
+ - ~<<~ allows to compute the left shift. In practice, given a number,
+   it shifts it to the left by one bit.
+ - ~>>~ allows to compute the right shift. In practice, given a
+   number, it shifts it to the right by one bit.
+ - ~~~ allows to compute the one's complement. In practice, given a
+   number, it turns all its 1s into 0s and all its 0s into 1s.
+
+Some operators can also be combined with an assignment operator. For
+example, consider the following expression
+
+#+BEGIN_SRC c
+  x = x + 10;
+#+END_SRC
+
+It can be rewritten in a more compact form as follows:
+
+#+BEGIN_SRC c
+  x += 10;
+#+END_SRC
+
+Hence, given a binary operator ~op~ you can create an assignment
+operator with the format ~op=~.  When incrementing and decrementing by
+one, C also provides an even more compact form with the increment
+operator ~++~ and the decrement operator ~--~. The increment operator
+increments a variable by one, and the decrement operator decrements it
+by one. Also, these operators can be placed both on the left (prefix)
+and on the right (postfix) of a variable, but they have a different
+effect.  When they are postfix, the operator first returns the current
+value of the variable, and then it performs the increment/decrement as
+a side-effect. When they are prefix, the operator fir preforms the
+increment/decrement, and then it returns the new vlaue for the
+variable. For example, can you predict without running it
+what will the following program print?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int x  = 5;
+
+      printf("x = %d\n", x++);
+      printf("x = %d\n", ++x);
+  }
+#+END_SRC
+
+Finally, the last operator to discuss is the conditional expression
+often known as ternary operator. The ternary operator has a condition
+and two outcomes separated by ~:~. If the condition is true, it the
+operator will return the result of the first expression, otherwise it
+will return the result of the second expression.  For example, can you
+predict without running it what will the following program print?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int x  = 5;
+
+      printf("result = %d\n", x > 10 ? 3 : 2);
+  }
+#+END_SRC
+
+
+* Exercise 1
+Write a program to determine the ranges of ~char~, ~short~, ~int~, and
+~long~ variables, both ~signed~ and ~unsigned~. For this exercise, you
+may want to use the ~<limits.h>~ header.
+
+* Exercise 2
+An IP address is a 32-bit number which identifes an host over a
+computer network. An IP address is often composed of a network part
+which identifies a network, and an host part which identifies a host
+within a network.  A network mask is a 32-bit number whose first n
+bits are all set to 1, and they allow to "remove" the host portion of
+an IP address.  Write a program that given an IP address and a network
+mask it prints the network and the host portion of the address. Also,
+the program should display the addresses in decimal dotted notation
+that is in the format a.b.c.d where a is the first byte of an address,
+b is the second byte of an address, etc.
+
+* Exercise 3
+Using the ternary operator, write a program that given 5 numbers
+prints the maximum number.
