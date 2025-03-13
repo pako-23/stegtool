@@ -52,6 +52,7 @@ of type integer.
   int main(void)
   {
       int x  = 5;
+
       printf("x = %d\n", x);
       x = 6;
       printf("x = %d\n", x);
@@ -71,6 +72,7 @@ declare a constant, but it will fail to compile. Why?
   int main(void)
   {
       const int x  = 5;
+
       printf("x = %d\n", x);
       x = 6;
       printf("x = %d\n", x);

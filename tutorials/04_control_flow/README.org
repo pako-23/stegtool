@@ -1,0 +1,200 @@
+#+TITLE: Control Flow
+
+The program we have written so far execute operations linearly in the
+same order. Namely, our programs always executed the next instruction.
+Control flow statements allows us to change this order of execution.
+
+* Branching Constructs
+The most basic control flow statement is the ~if-else~ statement. In
+an ~if-else~ statement we have a condition, and two branches. If the
+condition is not zero (true), the code under the ~if~ branch is
+executed; otherwise, the code under the ~else~ statement is
+executed. Note that the ~else~ is optional. In case there is no ~else~
+branch, the code under the ~if~ branch will be executed only if the
+condition is not zero.  For example, what will the following program
+output?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int x  = 5;
+
+      if (x % 2 == 0)
+	  printf("valid number\n", x);
+      else
+          printf("invalid number\n", x);
+  }
+#+END_SRC
+
+Additionally, the C programming language also allows to write a
+multi-way decision with the ~else-if~ construct. The ~else-if~
+construct allows to specify multiple conditions and the execution
+stops at the execution of the branch under the first non zero
+condition expression. For example, what will be the output of the
+following program?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int x  = 5;
+
+      if (x % 2 == 0)
+	  printf("x is a 2 number\n", x);
+      else if (x % 3 == 0)
+	  printf("x is a 3 number\n", x);
+      else if (x % 4 == 0)     /* Does this branch make sense? */
+	  printf("x is a 4 number\n", x);
+      else if (x % 5 == 0)
+	  printf("x is a 4 number\n", x);
+      else
+	  printf("not a valid number\n", x);
+  }
+#+END_SRC
+
+There is also another multi-way decision construct: the ~switch~
+statement. A ~switch~ statement tests an expression against a series
+of constant integer values each defining a case.  The following code
+shows an example of usage of a ~switch~ statement to detect if a
+character is a digit.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      char c  = '1';
+
+      switch (c) {
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+	  printf("it is a digit\n");
+	  /*
+	   * The break statement causes immediate exit from the switch
+           * statement. The default behavior is to fall through to the
+           * next case. Do we use it somewhere in this example?
+	   */
+	  break;
+      default:
+          /* This case defines the default action if no case is matched. */  
+	  printf("it is not a digit\n");
+      }
+  }
+#+END_SRC
+
+Differently from many other programming languages, C offers a ~goto~
+statement.  The ~goto~ statement allows to jump unconditionally to a
+given label. Usually, they are often used in error handling code.  The
+following example shows a common error handling pattern making use of
+the ~goto~ construct.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      char c  = 'c';
+
+      if (c < '0' || c > '9')
+	  goto error; /* Here we jump to the error label */
+
+      printf("The digit is %d\n", c - '0');
+
+   /* Here we define a label */
+   error:
+      printf("Error a digit is required\n");
+  }
+#+END_SRC
+
+* Loop Constructs
+Loops allow to execute some code until some condition expression
+becomes zero. In practice, it allows to execute some code multiple
+times. The C programming language offers three possible loop
+constructs. The first construct is the ~while~ loop. A ~while~ loop
+has a condition expression and a statement which is executed each time
+the loop is taken.  For example, using a ~while~ loop we can create a
+count-down as follows:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int i = 10;
+
+      while (i) {
+	  printf("%d\n", i);
+	  --i;
+      }
+
+      printf("DONE!!!\n");
+  }
+#+END_SRC
+
+A similar construct is a ~for~ loop. A for loop is semantically
+equivalent to a ~while~ loop.  The only difference is that a ~for~
+loop allows to write an initialization and an increment expression.
+For instance, we can write the same count-down program from above
+using a ~for~ loop as follows:
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      for (int i = 10; i; --i)
+	  printf("%d\n", i);
+
+      printf("DONE!!!\n");
+  }
+#+END_SRC
+
+Finally, the last loop construct to discuss is the ~do-while~. The
+main difference between a ~do-while~ and the ~while~ and the ~for~
+loop is into when the termination condition is checked. The ~while~
+and ~for~ loop check the termination condition before executing the
+body of the loop. The ~do-while~ check the termination condition after
+executing the body of the loop.  For example, the following program
+uses a ~do-while~ loop to check for a specific character entered by
+the user to terminate the program.
+
+#+BEGIN_SRC c
+  x#include <stdio.h>
+
+  int main(void)
+  {
+      int c;
+
+      do {
+	  printf("enter 'q': ");
+	  c = getchar();
+      } while(c != EOF && c != 'q');
+  }
+#+END_SRC
+
+It is sometimes convenient to exit a loop before testing the
+condition. The ~break~ statement does exactly that. Namely, it allows
+to exit a loop at any given time. At the same time, it is sometime
+useful skipping a loop iteration, and going to the next one without
+executing part of the loop body. This can be done with the ~continue~
+statement.
+
+* Exercise 1
+Write a program that given a number outputs the closest multiple of
+three.
+
+* Exercise 2
+Write a program that counts the number of bytes you receive in input
+and outputs it.  You can read a byte from input using the ~getchar~
+function. When the input ends the ~getchar~ function returns ~EOF~.
+
+
+* Exercise 3
+Write a program that given two numbers it computes the power of the
+first number to the second one.
+
+* Exercise 4
+Solve Exercise 3 without using any loop construct.
