@@ -131,7 +131,7 @@ they are the following:
    it shifts it to the left by one bit.
  - ~>>~ allows to compute the right shift. In practice, given a
    number, it shifts it to the right by one bit.
- - ~~~ allows to compute the one's complement. In practice, given a
+ - =~= allows to compute the one's complement. In practice, given a
    number, it turns all its 1s into 0s and all its 0s into 1s.
 
 Some operators can also be combined with an assignment operator. For
