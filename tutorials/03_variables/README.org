@@ -198,7 +198,7 @@ Write a program to determine the ranges of ~char~, ~short~, ~int~, and
 may want to use the ~<limits.h>~ header.
 
 * Exercise 2
-An IP address is a 32-bit number which identifes an host over a
+An IP address is a 32-bit number which identifies an host over a
 computer network. An IP address is often composed of a network part
 which identifies a network, and an host part which identifies a host
 within a network.  A network mask is a 32-bit number whose first n

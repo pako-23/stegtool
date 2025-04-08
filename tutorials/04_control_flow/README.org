@@ -22,7 +22,7 @@ output?
       int x  = 5;
 
       if (x % 2 == 0)
-	  printf("valid number\n", x);
+          printf("valid number\n", x);
       else
           printf("invalid number\n", x);
   }
@@ -102,6 +102,7 @@ the ~goto~ construct.
 	  goto error; /* Here we jump to the error label */
 
       printf("The digit is %d\n", c - '0');
+      return 1;
 
    /* Here we define a label */
    error:
@@ -162,7 +163,7 @@ uses a ~do-while~ loop to check for a specific character entered by
 the user to terminate the program.
 
 #+BEGIN_SRC c
-  x#include <stdio.h>
+  #include <stdio.h>
 
   int main(void)
   {
@@ -190,7 +191,6 @@ three.
 Write a program that counts the number of bytes you receive in input
 and outputs it.  You can read a byte from input using the ~getchar~
 function. When the input ends the ~getchar~ function returns ~EOF~.
-
 
 * Exercise 3
 Write a program that given two numbers it computes the power of the
