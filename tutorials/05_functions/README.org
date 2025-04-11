@@ -50,12 +50,12 @@ but we could have also defined the function as follows.
   }
 #+END_SRC
 
-However, teher is a small difference in these two definitions. The
+However, there is a small difference in these two definitions. The
 ~void~ in the parameter list explicitly declares that the function
 takes no arguments, while the empty parameter list means that the
 function takes an unspecified number of arguments.  That means that
 calling ~print_hello(10)~ in the first definition will generate a
-compiler error in the first case, while it will complile fine if we
+compiler error in the first case, while it will compile fine if we
 use the second style of definitions.
 
 A function can also change its behavior based on some inputs. For
@@ -95,7 +95,7 @@ string given a formatting (the first argument) and a variable number
 of arguments that will be used to produce the formatted output.
 Therefore, calling a function is as simple as spelling the name of the
 function and passing the required arguments to it. An argument is a
-value that is passed as input to a function invokation. As an example,
+value that is passed as input to a function invocation. As an example,
 let's try to call the ~is_prime~ function to print all the primes from
 ~1~ to ~100~.
 
@@ -148,7 +148,7 @@ the following code, what will be the output if you run it?
 In C, a function may call itself either directly or indirectly.  A
 function that calls itself is said to be recursive.  The idea of
 recursion is that a function calls itself to solve a problem by
-breaking it into smaller, identical subproblems. For example, the
+breaking it into smaller, identical sub-problems. For example, the
 computation of a factorial can be expressed as a recursion.  The
 factorial of a number ~n~ is computed as ~n! = n * (n-1) * ... * 1~,
 and we can write it in C as follows.
@@ -183,7 +183,7 @@ first number to the second one. However, this time define a function
 to compute the power.
 
 * Exercise 3
-An IP address is a 32-bit number which identifes an host over a
+An IP address is a 32-bit number which identifies an host over a
 computer network. An IP address is often composed of a network part
 which identifies a network, and an host part which identifies a host
 within a network.  A network mask is a 32-bit number whose first n
