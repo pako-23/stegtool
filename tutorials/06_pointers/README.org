@@ -1,0 +1,448 @@
+#+TITLE: Pointers and Arrays
+
+These notes aim at developing an abstraction of the computer's main
+memory. In practice, we will first describe how data is stored in
+computer's memory. In particular, we will cover how we can access and
+manipulate data via its memory address. A memory address is what we
+call a =pointer= in C. Pointers and arrays are closely related, so these
+notes will also explore this relationship.
+
+* Objects
+When we have have some data stored in memory, we call that region of
+memory an /object./ Therefore, all the variables we have defined so far
+are all objects with a different type. For example, the following code
+declares three objects: one with type ~char~, one with type ~int~,
+and one of type ~double~.
+
+#+BEGIN_SRC c
+  char c;      /* declaring object of type char */
+  int i = 10;  /* declaring object of type int */
+  double d;    /* declaring object of type double */
+#+END_SRC
+
+
+An object can also be an aggregate of other objects. The most basic
+object aggregate is an array of other objects. An array is an object
+consisting of a sequence of contiguous objects of the same type that
+we call /elements./ For example, the ~int A[10]~ statement declares an
+array of 10 elements of type ~int~. Another object aggregate is a
+structure which will cover in future notes.
+
+Each object has different properties. One property of an object is the
+/value./ The value of an object is the data stored in a chunk of
+memory whose content can be though as a sequence of bits representing
+the value of the object. However, we only care about the semantic
+representation of bits stored in a given object.  For example, in the
+code above the ~i~ object has numeric value ~10~. An object is also
+characterized by a /type./ The type defines the set of values for an
+object, and how we should interpret the bits stored at a particular
+object. For example, in the code above the ~int~ keyword tells us that
+we should interpret the contents of ~i~ as a integer number.
+
+Another property of an object is its /size./ The size of an object is
+simply the amount of bytes it takes to be stored in memory.  Given an
+object or some type, you can determine the size in bytes via the
+~sizeof~ operator.  The following code shows how to use the ~sizeof~
+operator to output the size in bytes of different objects. What will
+be the size of ~A~? Why?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int i = 10;
+      int A[10];
+
+      printf("sizeof(i) = %zu\n", sizeof(i));
+      printf("sizeof(int) = %zu\n", sizeof(int));
+      printf("sizeof(A) = %zu\n", sizeof(A));
+  }
+#+END_SRC
+
+Finally, another important property of objects is the their
+/lifetime./ The lifetime is the portion of execution of the program
+during which the object is alive and has a stored value at immutable
+position in memory.  For example, let's consider the following code.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      unsigned count = 0;
+
+      for (int c = getchar(); c != EOF; c = getchar())
+	  ++count;
+      printf("Bytes in the input: %ud\n", count);
+  }
+#+END_SRC
+
+The lifetime of ~count~ is the entire execution of the ~main~
+function, and the lifetime of ~c~ is the execution of the for-loop.
+
+* Pointers
+A pointer is simply the address of an object. As any other variable,
+we can also store and use these addresses in pointer variables. The
+following code shows how to declare an ~int~ object and another object
+that can store a pointer to an object of type ~int~.
+
+#+BEGIN_SRC c
+  int i = 10;   /* declaring an int object */
+  int *p = &i;  /* declaring a pointer to an int object */
+#+END_SRC
+
+A variable of type pointer can be declared by a type followed by the
+=*= symbol. In our example, it means that ~p~ refers to some object
+which has type ~int~.  In fact, each pointer is constrained to point
+to a particular kind of object (exception for the =void *= which we
+will cover later). The unary operator =&= returns the address of an
+object (a unary operator is simply an operator that takes only one
+argument). Therefore, the pointer ~p~ is being initialized with the
+address of =i=, so we say that =p= points to =i=. The =&= operator
+only applies to objects in memory: variables and array elements.
+
+The symbol =*= can also be used as a unary operator (we have already
+used it to multiply two numbers and to declare pointer
+variables). When applied to a pointer, it allows to dereference the
+pointer.  In this context, dereferencing means accessing the object a
+pointer refers to. For example, given the code above, the expression
+=*p= will be reading the value =p= points to, so it will return the
+value stored in =i=. The dereference operator can also be used for
+writing into an object. For example, consider the following code, what
+will be the output?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int i = 5;
+      int *p = &i;
+
+      printf("*p = %d, i = %d\n", *p, i);
+      *p = 14;
+      printf("*p = %d, i = %d\n", *p, i);
+      (*p)++;
+      printf("*p = %d, i = %d\n", *p, i);
+  }
+#+END_SRC
+
+
+* Pointers as Function Arguments
+Since C passes arguments to functions by value, there is no direct way
+for the called function to alter a variable in the calling function.
+For example, consider implementing a function ~swap~ that swaps two values.
+One could try to implement the following function, but it is wrong why?
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  void swap(int a, int b)
+  {
+      int tmp = a;
+      a = b;
+      b = tmp;
+  }
+
+  int main(void)
+  {
+      int a = 10, b = 20;
+
+      printf("a = %d, b = %d\n", a, b);
+      swap(a, b);
+      printf("a = %d, b = %d\n", a, b);
+  }
+#+END_SRC
+
+Well, because of the call-by-value semantics, calling ~swap~ will not
+have any effect on the arguments passed to it, since it will be
+swapping their copy.  However, we could solve this problem by passing
+pointers to the function, and redefining our function as follows.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  
+  void swap(int *a, int *b)
+  {
+      int tmp = *a;
+      *a = *b;
+      *b = tmp;
+  }
+
+  int main(void)
+  {
+      int a = 10, b = 20;
+
+      printf("a = %d, b = %d\n", a, b);
+      swap(&a, &b);
+      printf("a = %d, b = %d\n", a, b);
+  }
+#+END_SRC
+
+This time we managed to swap the two values, but how was it possible?
+We are still passing a copy to the ~swap~ function, but this time it
+is the copy of an address pointing to the objects we want to
+swap. That means that when we dereference that address we are
+accessing the data we want to manipulate. Effectively, pointer
+arguments enable a function to access and change objects in the
+function that called it.
+
+* The void Pointer
+In general, different pointer types are not compatible with each
+other. This is true even when the types they point to are themselves
+compatible. For example, =char *= is not compatible with =int *=,
+meaning that you are not allowed to assign a =char *= value to an =int
+*= object, even though assigning a char value to an int object is
+perfectly okay. However, it is useful to have a common, generic
+pointer type.  In C, this generic pointer type is =void *=. Therefore,
+any pointer type can be implicitly converted to and from a void *, and
+you can be sure that a pointer value remains consistent when copied
+through a =void *=, as shown in the following code.
+
+#+BEGIN_SRC c
+  #include <assert.h>
+
+  int main(void)
+  {
+      int i;
+      int * p
+	  int * q;
+      void * x;
+
+      p = &i;
+      x = p;                          /* x can take values of any pointer type */
+      q = x;                          /* x can be converted into any pointer type */
+
+      assert (q == &i);               /* the implicit conversions maintain
+					 the original pointer value (address) */
+  }
+#+END_SRC
+
+In practice, =void *= can be used whenever you want to refer to any
+object. For example, standard function =memcpy= allows to copy objects
+(referred by pointer) regardless of their type, so it is declared to
+take =void *= arguments (on for the destination object and one for the
+source object).
+
+* The NULL pointer
+Sometimes it is useful to have a pointer value that is guaranteed not
+to be a valid pointer. That is what the NULL pointer is: a pointer
+value that will never be the address of an object. For example, a NULL
+pointer can be returned by some function to indicate some failure, or
+it can be used as the terminator for some data structures such as
+linked lists (we will see linked lists in future notes). A NULL
+pointer in C ca be expressed either using the =NULL= macro after
+including =stdlib.h=, or as numeric constant =0=.
+
+* Arrays and Pointer Arithmetic
+In C, there is a strong relationship between pointers and arrays.
+Since the elements of an array are laid out in memory one after the
+other, there is a linear relation between the index of an element in
+the array and the pointer to that element. In fact,  any
+operation that can be achieved by array subscripting can also be done
+with pointers. For example, consider the following code.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int A[10];
+
+      printf("A:");
+      // in this loop we iterate over the array using an index
+      for (int i = 0; i < 10; ++i) {
+	  A[i] = i*i;
+	  printf(" %d", A[i]);
+      }
+
+      printf("\n");
+
+      printf("A:");
+      // in this loop we iterate over the array using a pointer
+      for (int *p = &(A[0]); p != &(A[10]); ++p)
+	  printf(" %d", *p);
+      printf("\n");
+  }
+#+END_SRC
+
+The second loop shows how a pointer can be used to access elements of
+an array.  Initially, the pointer takes the address of the first
+element of the array, =&(A[0])=; then we access all the elements of
+the array, in sequence, by repeatedly incrementing the pointer. The
+language defines the pointer increment =++p= such that if =p= points
+to an element of an array, then =p+1= points to the next element. In
+general, if =p= points to the element in position =i= in the array and
+=n= is an integer, then =p + n= is a pointer that points to the
+element in position =i + n= in the array. In fact, we can
+express the same code as follows.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int A[10];
+
+      printf("A:");
+      for (int i = 0; i < 10; ++i) {
+	  A[i] = i*i;
+	  printf(" %d", A[i]);
+      }
+
+      printf("\n");
+
+      printf("A:");
+      // we do not use a pointer to iterate over A anymore
+      for (int i = 0; i < 10; ++i)
+	  printf(" %d", *(p + i));
+      printf("\n");
+  }
+#+END_SRC
+
+Since we can define a sum between a pointer and an integer, it becomes
+natural to also define a difference operation between pointers. In
+practice, the difference allows us to obtain the position within an
+array. For example, let's try to output each array element with its
+index in the previous example.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      int A[10];
+
+      printf("A:");
+      for (int i = 0; i < 10; ++i) {
+	  A[i] = i*i;
+	  printf(" %d", A[i]);
+      }
+
+      printf("\n");
+
+      printf("A:");
+      /*
+       * The expression A is equivalent a pointer to the first element
+       * of the array, so expression A + 10 will point to one past the
+       * last element of the array.
+       */
+      for (int *p = A; p != A + 10; ++p)
+	  // here we use the difference between to pointers to get the
+	  // index of the iteration.
+	  printf(" %ld->%d", p - A, *p);
+      printf("\n");
+  }
+#+END_SRC
+
+Keep in mind that such arithmetic operations are possible thanks to
+the type on pointers. In fact, since a pointer is an address in
+memory, the type determines how much this address should be
+incremented such that it will point to the next element. Also, keep in
+mind that accessing some memory beyond the allocated one will result
+into undefined behavior. In most programming languages, accessing an
+item outside the range of a array will result in some some sort of
+error.  In C, it is not defined what will happen, and it is totally
+dependent on the machine on which the program runs (that's why it is
+called undefined behavior).  For instance, the program might fail, or
+it may continue running, or it might have some other effects. For
+example, in the example above, if we try to access =*(A + 10)=, we are
+one past the last element of =A=, so we are in some memory that is not
+allocated to our program, and we would have an undefined behavior. The
+code above does never access this item, why?
+
+* Strings
+In many example programs, we have already seen strings. For example,
+consider our very first C program.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(void)
+  {
+      printf("Hello world!\n");
+  }
+#+END_SRC
+
+In this code, we want to print some text, so we wrap the message in
+double-quotes, and we get a string which we pass to the ~printf~
+function, but how is a string represented as an object?  A string in C
+is a sequence of contiguous ~char~ object, that is an array of ~char~
+objects.  The sequence starts at a given ~char~ object and is
+terminated by a special ~char~ object, the null character ~'\0'~.
+
+* The main Function
+Through our examples, we have declared many times a function named
+=main=, but what is it? =main= is the function that starts the
+execution of a program, so it is effectively the entry point into the
+program. Optionally, the =main= function can also take two
+parameters. The first (conventionally called =argc=) is the number of
+command-line arguments the program was invoked with; the second
+(conventionally called =argv=) is a pointer to an array of character
+strings that contain the arguments, one per string. For example consider
+the following program that simply prints all its invocation arguments.
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+
+  int main(int argc, char *argv[])
+  {
+      for (int i = 0; i < argc; ++i)
+	  printf("argv[%d] = %s\n", i, argv[i]);
+  }
+#+END_SRC
+
+If we compile it and try to run it as follows, what will be its
+output? (the first argument is always the name of the program)
+
+#+BEGIN_SRC c
+  $ cc prog.c -o prog
+  $ ./prog arg1 someotherarg arg2
+#+END_SRC
+
+However, =main= is also a special function.  It cannot be used
+anywhere in the program, therefore it does not allow any recursive
+call.  It is declared as having an =int= return value, but you are not
+forced to add a return statement.  f control reaches the end of main
+without encountering a return statement, the effect is that of
+executing =return 0=.  The return value represents the exit status of
+the program (the return status indicates whether the execution is
+successful or not).  The specific interpretation of the exit status is
+system dependent. However, the =stdlib.h= header defines two
+constants, =EXIT_SUCCESS= and =EXIT_FAILURE=, that represent a
+"success" or "failure" status, respectively.
+
+* Exercise 1
+Write a function that given a C string computes its length.  In
+practice, it should be something similar to the =strlen= function, but
+you are not allowed to use it.
+
+* Exercise 2
+Write a function that given 2 C strings computes compares the first
+string with the second one. If they are equal, it should return 0;
+otherwise, it should return the difference between the first two
+non-equal characters.  In practice, it should be something similar to
+the =strcmp= function, but you are not allowed to use it.
+
+* Exercise 3
+Try to implement the =memcpy= standard function described in the section
+related to void pointers. The function should be defined as follows.
+
+#+BEGIN_SRC c
+  void my_memcpy(void *dest, const void *src, unsigned long n);
+#+END_SRC
+
+You are not allowed to use =memcpy=.
+
+* Exercise 4
+Write a small program that given a word and a list of words prints the
+words from list that contain the first argument. For instance, the
+program should produce something similar to the following.
+
+#+BEGIN_EXAMPLE
+  ./exercise4 test hello how test are 'some tests are flaky' tests 'hello world'
+  argv[4] = "test"
+  argv[6] = "some tests are flaky"
+  argv[7] = "tests"
+#+END_EXAMPLE
