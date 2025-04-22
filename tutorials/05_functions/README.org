@@ -78,7 +78,7 @@ number is prime; otherwise it returns ~0~.
 #+BEGIN_SRC c
   #include <stdio.h>
 
-  void is_prime(int n)
+  int is_prime(int n)
   {
       for (int i = 2; i*i <= n; ++i)
 	  if (n % i == 0)
@@ -102,7 +102,7 @@ let's try to call the ~is_prime~ function to print all the primes from
 #+BEGIN_SRC c
   #include <stdio.h>
 
-  void is_prime(int n)
+  int is_prime(int n)
   {
       for (int i = 2; i*i <= n; ++i)
 	  if (n % i == 0)
