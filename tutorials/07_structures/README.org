@@ -1,0 +1,507 @@
+#+TITLE: Structures
+
+In the notes about pointers, we stated that there is another type of
+aggregate objects other than arrays. Structures are the other
+aggregate type allowed in C. A structure is a collection of one or
+more variables, possibly of different types, grouped together under a
+single name. These notes will explore structures, enumerations,
+unions, and dynamic object allocation.
+
+* Structures
+Structures allow to define a new aggregate type.  Differently from
+arrays, structures allow to bundle together objects of different
+types. However, objects within a structure do not necessarily have to
+be of different types. For example, the following code defines a a
+structure to hold the coordinates of a point in a two-dimensional
+space.
+
+#+begin_src c
+  struct point {
+      float x;
+      float y;
+  };
+#+end_src
+
+A structure definition can also contain other structures, or any other
+type. For example, consider the following definitions for a data type
+representing a person.
+
+#+begin_src c
+  struct date {
+      int day;
+      int month;
+      int year;
+  };
+
+  struct person {
+      char *first_name;
+      char *last_name;
+      struct date birthday;
+  };
+#+end_src
+
+The keyword =struct= introduces a structure declaration (usually
+followed by its definition). A structure definition consists of a list
+of variable declarations within curly braces. Each variable name in a
+structure is called /member./  The /structure tag/ is the name
+following the =struct= keyword, and it is optional.  In fact, we could
+write the following.
+
+#+begin_src c
+  struct {
+      float x;
+      float y;
+  } x, y, z;
+#+end_src
+
+In the code above, we are declaring three variable where each will
+have a member named =x= of type =float= and a member named =y= of type
+=float=. If a a struct declaration has a tag, the tag can be used
+later in definitions of instances of the structure.  For example,
+given the declaration for a two-dimensional point, we can define a
+variable with type =struct point= as follows.
+
+#+begin_src c
+  struct point p;
+#+end_src
+
+As with variables, also structures can be initialized with a list of
+inizializers for each member.
+
+#+begin_src c
+  struct point p = { 10.1, 5.2 };
+#+end_src
+
+We can also explicitly initialize each member as follows.
+
+#+begin_src c
+  struct point p = { .x = 10.1, .y = 5.2 };
+#+end_src
+
+We can access a member of a structure with the =.= operator.  For
+example, give the declaration of =p=, we could print the coordinates
+stored in =p= as follows.
+
+#+begin_src c
+  printf("(%f, %f)", p.x, p.y);
+#+end_src
+
+It is quite common to use structure objects through
+pointers. Typically, you do not pass to function a structure object,
+but you pass a pointer to that object. What could be the reason? Well,
+C uses a call-by-value semantics, so copying a pointer is usually less
+expensive than copying an entire structure which might contain many
+members. For example, let's define a function that prints a point.
+
+#+begin_src c
+  /* const in front of struct point means that we cannot modify the
+   * object pointed by p.
+   */
+  void print_point(const struct point *p)
+  {
+      printf("(%f, %f)", (*p).x, (*p).y);
+  }
+#+end_src
+
+A pointer to a structure object is no different than other
+pointers. In particular, you can dereference the pointer to obtain the
+referenced object. In the code above, we use =(*p).x= to refer to the
+=x= member of the =struct point= object pointed by =p=. In practice,
+we dereference a pointer first to obtain a structure, and the we use
+the =.= operator to access a member of the structure. This operation
+is quite common in C, but the syntax is not so elegant. For instance,
+you always have to add the parentheses around the dereference
+expression. For this reason, C provides a more elegant and readable way
+for accessing members of a structure from a pointer via the =->=
+operator. Therefore, we can rewrite our =print_point= function more
+elegantly as follows.
+
+#+begin_src c
+  void print_point(const struct point *p)
+  {
+      printf("(%f, %f)", p->x, p->y);
+  }
+#+end_src
+
+In practice, the =->= operator the dereference of a pointer
+with the access of some structure member.
+
+* Enumerations
+In C, an enumeration is a data type used to assign names to integer
+constants. For example, we can define an enumeration for the days of a
+week as follows.
+
+#+begin_src c
+  enum weekdays {
+      MONDAY,    // Each name defines a constant
+      TUESDAY,
+      WEDNESDAY,
+      THURSDAY,
+      FRIDAY,
+      SATURDAY,
+      SUNDAY,
+  };
+#+end_src
+
+Effectively, an enumeration defines some constants and assigns them a name
+which must be unique. By default, the first name will have integer value 0,
+the second will have integer value 1, etc. However, we can also specify
+the values for the constants in the enumeration as follows.
+
+#+begin_src c
+  enum weekdays {
+      MONDAY = 1,    // Now the enumeration value will start from 1
+      TUESDAY,
+      WEDNESDAY,
+      THURSDAY,
+      FRIDAY,
+      SATURDAY,
+      SUNDAY,
+  };
+#+end_src
+
+Given the enumeration definition, we can use them as we would use a
+constant. For example, let's write a function that given a day of the week
+returns 1 if it is weekend; otherwise, it returns 0.
+
+#+begin_src c
+  int is_weekend(enum weekdays day)
+  {
+      return day == SATURDAY || day == SUNDAY;
+  }
+#+end_src
+
+* Unions
+A union is variable that can hold objects of different types and
+sizes, but only an object of one type at the time can be stored within
+a union. For example, imagine we want to identify a user by e-mail,
+phone number, or some number.  An e-mail address is a string of up to
+254 characters; a phone number is a string of up to 15 numbers; an
+internal numeric user identification is a non-negative integer. We
+could define the user identifier with a union as follows.
+
+#+begin_src c
+  union user_id {
+      char phone[16];
+      char email[256];
+      unsigned num;
+  };
+#+end_src
+
+If we declare a variable of type =union user_id=, it will be large
+enough to hold the largest of the three types.  Any of these types may
+be assigned to the variable and then used in expressions, so long as
+the type retrieved is the most recently stored. It is the programmer's
+responsibility to keep track of which type is currently stored in a
+union. Storing one type in an union and retrieving another is
+undefined behavior. The notation for accessing members of a union is
+similar to the one for members of a structure.  Usually, we use
+another variable to keep track of the last type stored, and often we
+use group everything into a structure. Therefore, our definition of a
+user identifier might be written as follows.
+
+#+begin_src c
+  enum user_id_t {
+      USER_ID_PHONE,
+      USER_ID_EMAIL,
+      USER_ID_NUM,
+  };
+
+  struct user_id {
+      enum user_id_t type;
+
+      union {
+	  char phone[16];
+	  char email[256];
+	  unsigned num;
+      };
+  };
+#+end_src
+
+Given this definition, we can define a function to output the
+user identifier as follows.
+
+#+begin_src c
+  void print_user_id(const struct user_id *id)
+  {
+      switch(id->type) {
+      case USER_ID_PHONE:
+	  printf("%s\n", id->phone);
+	  break;
+      case USER_ID_EMAIL:
+	  printf("%s\n", id->email);
+	  break;
+      case USER_ID_NUM:
+	  printf("%d\n", id->num);
+	  break;
+      }
+  }
+#+end_src
+
+
+* Typedef
+The C programming language provides a way of creating new data type
+names.  The definition of a new data type name starts with the
+=typedef= keyword.  For example, one could define the =age= type to be
+an integer as follows.
+
+#+begin_src c
+  typedef int age;
+#+end_src
+
+The statement above makes the name =age= a synonym of =int=, and now
+=age= can be also used in declaration. For instance, it is possible
+declaring a pointer to =age=, or an array as follows.
+
+#+begin_src c
+  age *p;
+  age ages[10];
+#+end_src
+
+Obviously, =typedef= statements can also be used with structures. For example,
+we could define the type to represent a person as follows.
+
+#+begin_src c
+  typedef struct date {
+      int day;
+      int month;
+      int year;
+  } date;
+
+  typedef struct person {
+      char *first_name;
+      char *last_name;
+      date birthday;
+  } person;
+#+end_src
+
+Or, we could omit the structure tag.
+
+#+begin_src c
+  typedef struct {
+      int day;
+      int month;
+      int year;
+  } date;
+
+  typedef struct {
+      char *first_name;
+      char *last_name;
+      date birthday;
+  } person;
+#+end_src
+
+There are two main reasons for creating new data type names:
+ - Parameterize a program against portability problems for data types
+   that are machine dependent.  A common example is the use of
+   =typedef= names for various integer quantities, such as =size_t=
+   declared in the standard library.
+ - Providing better documentation for a program. For example, =age= is
+   more descriptive compared to =int=.
+
+* Dynamic Object Allocation
+In our programs, we have always used static objects. Meaning that we
+could not grow them dynamically. For example, consider arrays, we have
+always declared them with a fixed size with no way of accommodating a
+variable number of elements. However, some real applications do not
+know about the size of their input in advance, so they need to grow or
+shrink some data structures. A data structure is simply a storage for
+some data.  An array is an example of a data structure, and we will
+see some more in this section.
+
+The idea of dynamic memory allocation is that we can ask our operating
+system to get some memory at runtime (and not at compile time as we
+did in all our previous examples). However, we are also responsible
+for returning that memory to the operating system once we are done
+with it.  In practice, the =stdlib.h= provides the =malloc= function
+that can request a block of memory from the operating system
+(allocation), which we can then return with the =free= function
+(deallocation). You can think of the memory allocation and
+deallocation as borrowing money from someone. When you allocate, you
+are borrowing some money from the operating system, that you can later
+return by deallocating.  Obviously, you have to return all the memory
+you requested from the operating system otherwise you will be leaking
+memory. You can think of a memory leak as someone not paying its
+debts.  To show how these two functions work, let's try to implement a
+linked list. A linked list is a dynamic data structure.  Unlike
+arrays, which store data in a contiguous block of memory, linked lists
+store each data item in a structure called node. A node simply
+contains the actual data item, and a referent to the next element of
+the list.  In practice, the next element of a list is simply a pointer
+to another node. You can think of a linked list as a chain where each
+link is a node, containing a way of getting to the next node. The idea
+then is that we can simply add new items to the list by adding a new
+node in front of the list.  Let's implement a linked list to see how
+it works.
+
+#+begin_src c
+  #include <stdlib.h>
+  #include <stdio.h>
+
+  struct node {
+      /* the data we want to store in each node. */
+      int value;
+      /* this is simply a node to the next node of this list. */
+      struct node *next;
+  };
+
+
+  struct list {
+      /* we simply store a pointer to the first node of the list. */
+      struct node *head;
+  };
+
+  /* We define a function to initialize an empty list. */
+  void list_init(struct list *l)
+  {
+      /*
+       * NULL is a special value indicating that there is no node, so in
+       * this case it indicates that the list is empty.
+       */
+      l->head = NULL;
+  }
+
+  /*
+   * We define a function to clear all the memory allocated for a linked
+   * list.
+   */
+  void list_free(struct list *l)
+  {
+      /*
+       * We need to deallocate each node in the list, so we iterate over
+       * the list and deallocate one node at the time.
+       */
+      while (l->head) {
+	  /*
+	   * We store the current node. We will need it later to
+	   * deallocate it.  We cannot deallocate it right away
+	   * otherwise we will not be able to use the next element to
+	   * move to the next node of the list. Remember that once you
+	   * deallocate some memory block accessing that block is
+	   * undefined behavior. So the idea is that we save the pointer
+	   * to the memory block in tmp, we move to the next node, and
+	   * then we deallocate tmp.
+	   */
+	  struct node *tmp = l->head;
+
+	  // We simply go to the next node of the list.
+	  l->head = l->head->next;
+
+	  /*
+	   * Here we return the memory we allocated back to the
+	   * operating system. The free function only takes a pointer to
+	   * some memory previously allocated. In this case, it is a
+	   * pointer to a node allocated by the list_add function.
+	   */
+	  free(tmp);
+      }
+  }
+
+  /*
+   * Add a new data item in the list. In case of success, it returns 1;
+   * otherwise it returns 0.
+   */
+  int list_add(struct list *l, int value)
+  {
+      /*
+       * Here we allocate some memory for a node of a linked list.  The
+       * malloc function takes as argument the size of the memory we are
+       * requesting in bytes.  In our case, we need enough memory to
+       * have a node, and we can use the sizeof operator to find the
+       * size in bytes of a node.
+       */
+      struct node *node = malloc(sizeof(struct node));
+      /*
+       * In case the memory allocation succeeds, malloc returns a valid
+       * pointer; otherwise, it returns NULL indicating that there was
+       * an error. Therfore, in case of error we return 0 from this
+       * function.
+       */
+      if (node == NULL) return 0;
+
+
+        
+
+      node->value = value;   /* Adding the value to node. */
+
+      /*
+       * This node will be in front of the entire list. Therfore, the
+       * current list will be the next of this node, and this node will
+       * become the head of the list.
+       */
+      node->next = l->head;  
+      l->head = node;
+
+      return 1;
+  }
+
+
+  int main(int argc, const char *argv[])
+  {
+      struct list list;
+
+      list_init(&list);
+
+      for (int i = 1; i < argc; ++i)
+	  /*
+	   * Here we add an item to the list and we check if there was a
+	   * failure.  In case of failure, list_add returns 0, so we
+	   * will simply deallocate the memory we reserved and return.
+	   */
+	  if (list_add(&list, atoi(argv[i])) == 0) {
+	      // Also in case of failure we should release memory
+	      list_free(&list);
+	      return EXIT_FAILURE;
+	  }
+
+      if (list.head == NULL) {
+	  printf("Empty list\n");
+	  goto end;
+      }
+
+      // Here we simply output all the elements in the list
+      printf("list: %d", list.head->value);
+      for (struct node *p = list.head->next; p; p = p->next)
+	  printf(", %d", p->value);
+      printf("\n");
+
+   end:
+      // Once we are done with the list we MUST deallocate it
+      list_free(&list);
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+
+* Exercise 1
+In these notes, we have seen how to implement a linked list. Try to
+implement a dynamic array. Implement the same program as the
+linked-list example, but this time use a dynamic array. For a dynamic
+array, you can define a structure holding a pointer to integers (the
+array), the current length of the array, and the capacity of the
+array. The idea is that the length is always less or equal than the
+capacity. When we add a new value to the array, we add the item at
+position =length=, and we increase =length= by one. However, when the
+length becomes equal to the capacity, we must reallocate the array to
+have enough room for the new item. Usually, we allocate a new array
+that is double the capacity, we copy the content of the old one into
+the new one, and we release the old one.
+
+
+* Exercise 2
+In the first exercise, whenever you did not have enough room to add a
+new value, you were allocating a new array with double size, copying
+the old array in the new one, and deallocating the old one. However,
+there is a slightly more efficient solution that uses the =realloc=
+function. Try to read the documentation of the =realloc= function, and
+try to improve the implementation of the dynamic array from the
+previous exercise using =realloc=.
+
+* Exercise 3
+For now, we have only added numbers to our data structures. Let's try
+to add a name or a number. You can accomplish this task using a
+union. When you add a name to the data structure, you should allocate
+a new string which is a copy of the value in ~argc~. How does the
+memory deallocation changes?  To detect if the i-th value of ~argc~
+contains a number of a name you can use =isdigit(argc[0][0])= from the
+=ctype.h= header.
