@@ -1,0 +1,71 @@
+#+TITLE: Input and Output
+
+In many examples, we have already used some of the input and output
+functions.  In fact, our first program contained an output function,
+the =printf= function.  These notes aim at providing an introduction
+to some of the input/output functions provided by the C standard
+library.  Input and output operations are handled through a set of
+functions defined in the header file =stdio.h=. These functions
+provide ways to read data from the keyboard, write data to the screen,
+and interact with files. Understanding these I/O functions is
+fundamental to building programs that communicate with the user, or,
+more generally, work with data.
+
+* Standard I/O Streams
+We will start our discussion with a description of what a standard I/O
+stream is.  In C, when you open a file with the standard I/O library,
+we say that we have a stream associated with the file. In practice, a
+stream is a handle representing the file as a sequence of bytes, and
+you can pass it to standard I/O functions to read/write data.  You can
+open a file with the =fopen= function. The =fopen= function takes two
+arguments: the path to the file you want to open, and the modality you
+want to use to open a file.  The mode is a string containing with one
+of the following characters:
+
++--------+----------------------------------------------------------+
+| Option | Description                                              |
++--------+----------------------------------------------------------+
+| =r=    | Open text file for reading.  The stream is positioned    |
+|        | at the beginning of the file.                            |
++--------+----------------------------------------------------------+
+| =r+=   | Open for reading and writing.  The stream is positioned  |
+|        |at the beginning of the file.                             |
++--------+----------------------------------------------------------+
+| =w=    | Truncate  file to zero length or create text file for    |
+|        |writing.  The stream is positioned at the beginning of    |
+|        | the file.                                                |
++--------+----------------------------------------------------------+
+| =w+=   | Open for reading and writing.  The file is created if    |
+|        |it does not exist, otherwise  it  is  truncated. The      |
+|        |stream is positioned at the beginning of the file.        |
++--------+----------------------------------------------------------+
+| =a=    | Open for appending (writing at end of file).  The        |
+|        |file is created if it does not exist.  The stream         |
+|        |is positioned at the end of the file.                     |
++--------+----------------------------------------------------------+
+| =a+=   | Open  for  reading  and appending (writing at end        |
+|        |of file).  The file is created if it does not exist.      |
+|        |Output is always appended to the end of the file.         |
++--------+----------------------------------------------------------+
+
+The mode string can also include the letter =b= either as a last
+character or as a character between the characters in any of the
+two-character strings described above. The =b= character indicates
+that the stream is open in binary mode, so bytes are read/written
+exactly as they are without going through any translation. The =fopen=
+returns a pointer to a =FILE= object (has return type =FILE *=).  On
+failure, the function returns =NULL=. Once you are finished using a
+file, you must close it using the =fclose= function.
+
+There are three streams that are predefined and automatically
+available to a process: standard input (=stdin=), standard output
+(=stdout=), and standard error (=stderr=). The standard input is a
+stream that refers to the default input device that the program uses
+to read data. In most cases, this will be the keyboard, but it does
+not have to. The standard output is a stream that refers to the
+default output device that the program uses to display data. In most
+cases, this will be connected to the terminal or console screen, but
+it does not have to.  The standard error is a stream used for error
+messages.  Also, =stderr= is usually connected to the terminal or
+console screen, but it does not have to. Note that these streams do
+not have to be closed once you are done using them.
