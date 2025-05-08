@@ -52,3 +52,205 @@ it does not have to.  The standard error is a stream used for error
 messages.  Also, =stderr= is usually connected to the terminal or
 console screen, but it does not have to. Note that these streams do
 not have to be closed once you are done using them.
+
+
+* Unformatted I/O
+The simplest input mechanism is to read one character at the time.
+You can read one character at the time from a stream using the =fgetc=
+function. This function returns a character as an =unsigned char= cast
+to an =int=, or =EOF= on end of file or error. In case you want to
+read one character at the time from the standard input, you can also
+use the =getchar= function. In practice, the =getchar= function is
+equivalent to =fgetc(stdin)=.  Similarly, you can write on character
+at the time into a stream using the =fputc=, and the =putchar(c)=
+function is equivalent to =fputc(c, stdout)=, i.e. it allows to write
+a character onto standard output.
+
+Given these two functions, we can already implement a program that can
+display to standard output the content of a file as follows:
+
+#+begin_src c
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int main(int argc, char *argv[])
+  {
+      FILE *fp;
+      int c;
+
+      /* Checking if the user provided a file. */
+      if (argc != 2) {
+	  /* Writing an error message to stderr. */
+	  fprintf(stderr, "usage: %s <file>\n", argv[0]);
+	  return EXIT_FAILURE;
+      }
+
+      /* Open the file given by the user for reading. */
+      fp = fopen(argv[1], "r");
+      if (fp == NULL) { /* In case of error, fopen returns NULL */
+	  fprintf(stderr, "failed to open file: %s\n", argv[1]);
+	  return EXIT_FAILURE;
+      }
+
+      /*
+       * Read one character at the time from the stream, and write
+       * it to stdout.
+       */
+      while ((c = fgetc(fp)) != EOF)
+	  putchar(c);
+
+      /* Remember to close the stream once done. */
+      fclose(fp);
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+The C standard also allows to read more than one character at the
+time. For example, the =fgets= function declared as follows:
+
+#+begin_src c
+  char *fgets(char *s, int size, FILE *stream);
+#+end_src
+
+=fgets= allows to read an entire line from a strem. In practice,
+=fgets= reads in at most one less than =size= characters from =stream=
+and stores them into the buffer pointed to by =s=.  Reading stops
+after an =EOF= or a newline.  If a newline is read, it is stored in
+=s=.  A terminating null byte is stored after the last character in
+the buffer. =fgets= returns s on success, and =NULL= on error or when
+end of file occurs while no characters have been read.  Similarly, you
+can also output more than one character into a stream with the =fputs=
+function declared as follows:
+
+#+begin_src c
+  int fputs(const char *s, FILE *stream);
+#+end_src
+
+=fputs= writes the string =s= into =stream=. The standard also
+includes the =puts= function that writes a string =s= into standard
+output with a trailing newline.
+
+* Formatted I/O
+By formatted I/O, we refer to those I/O functions that allow to
+control how data is provided or displayed. In practice, we use some
+format specifies to define how the I/O functions must behave. The most
+basic formatted I/O function is the =printf= function which we have
+already encountered in previous examples. The =printf= function allows
+to write some formatted text into standard output. The first parameter
+is a string specifying the format of the output. The subsequent
+parameters represent the values that should be used to produce the
+final output (essentially you will have one parameter for each
+conversion specification in the format string).  The format string is
+composed of zero or more directives: ordinary characters (not =%=),
+which are copied unchanged to the output stream; The =%= starts a
+conversion specification. A conversion specification defines how to
+treat the corresponding argument. In practice, a conversion
+specification is replaced with the value of the corresponding
+parameter in the final output. For example, consider the following
+=printf= statement:
+
+#+begin_src c
+  int num = 10, num2 = 12;
+  printf("num: %d, num2: %d", num, num2);
+#+end_src
+
+In the code above, the first =%d= conversion specification will be
+replaced with the decimal value of the first parameter (=num=), and
+the second =%d= will be replaced with the decimal value of the second
+parameter (=num2=). The main conversion specifiers are the following:
+
+| Specifier | Description                                |
+|-----------+--------------------------------------------|
+| =%d=      | Output an integer number in decimal.       |
+| =%ld=     | Output a =long= integer number in decimal. |
+| =%x=      | Output an integer number in hexadecimal.   |
+| =%s=      | Output a string.                           |
+| =%f=      | Output a real number.                      |
+
+
+The =printf= function allows to output in standard output, but what if
+we want to write our output into a generic stream? It can be done
+with the =fprintf= function that is declared as follows:
+
+#+begin_src c
+  int fprintf(FILE *stream, const char *format, ...);
+#+end_src
+
+You can think of =printf= being the same as =fprintf= with the first
+parameter fixed to =stdout=. The ellipsis indicate that the function
+can take a variable number of arguments (in fact they depend on the
+value of the format string).
+
+Obviously, there are also functions that allow to read some formatted
+data from the input. Namely, the =scanf= function allows to read some
+formatted input from standard input. The first parameter to the
+=scanf= function is a format string following similar rules to those
+of the =printf= function. However, how can we return the converted
+value read from the input? (in C you can only return a single value
+from a function). We can solve this problem by using a
+pointer. Therefore, the =scanf= function will take one pointer
+argument for each conversion specification in the format string
+indicating the output variable for each formatted value read.  For
+example, consider the following code:
+
+#+begin_src c
+  int x;
+  float y;
+  scanf("%d %f", &x, &y);
+#+end_src
+
+The code will read two numbers from standard input. The first will be
+read as a decimal integer while the second will be read as a real
+number. Then, their values will be store in =x= and =y= respectively.
+
+As with the =printf= function, there is also a function similar to
+=scanf= that allows to read from a generic stream, the =fscanf=
+function. The =fscanf= function is declared as follows:
+
+#+begin_src c
+  int fprintf(FILE *stream, const char *format, ...);
+#+end_src
+
+You can think of =scanf= being the same as =fscanf= with the first
+parameter fixed to =stdin=.
+
+* Exercise 1
+Write a program that converts from upper case to lower case the text
+read from standard input.
+
+* Exercise 2
+Write a program similar to the =wc= utility. By default, the program
+should read its input from standard input. Optionally, a user might
+provide one or more files. By default, the program should print the
+number of characters read from the input. If called with the =-l=
+option, it should print the number of lines (delimited by a newline
+character).  If called with the =-w= option, it should print the
+number of words in the input.  When the input consists of one or more
+files, the program should write its output in the following format:
+
+#+begin_example
+  ./wc file1 fil2 fil3
+   file1   #characters
+   file2   #characters
+   file3   #characters
+#+end_example
+
+You can assume that the options will always appear before some
+eventual input files.
+
+* Exercise 3
+Write a program that takes information about n students. The value n
+will provided in the command line arguments. For each line you will
+have the name of the student as a single word (you may assume that no
+student has a name longer than 30 characters), the number of grades,
+and a list of grades as floating point numbers. For each student,
+compute the average of the grades and output a table similar to the
+following:
+
+#+begin_example
+    Name      GPA
+  ---------  ------
+  Studnet1    3.75
+  Studnet2    6.30
+  Studnet3    10.0
+#+end_example
