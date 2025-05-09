@@ -1,0 +1,105 @@
+#+TITLE: Object-Oriented Programming in C
+
+These notes will be a bit different from the previous ones.  In fact,
+these will be more about the design of C applications, covering how
+to modularize code through some language specific features. The main
+goal of these notes is to understand some of the modularization
+techniques in C used in existing software, and to understand how the
+concept of an /object/ is implemented in object-oriented programming
+languages. As an example for our discussion, we will consider a module
+implementing a /container/ interface. In this discussion, a container
+is simply a data-structure that allows to represent a set of integer
+values. The operations offered by the container library we are going
+to implement are the following:
+
+| Operation  | Description                                                   |
+|------------+---------------------------------------------------------------|
+| init(x)    | Initializes the container, allocating the required resources. |
+| destroy(x) | Destroys the container releasing all allocated resources.     |
+| insert(x)  | Adds a new element to the container.                          |
+| remove(x)  | Removes an element from a container.                          |
+| find(x)    | Checks whether an element belongs to a container.             |
+
+
+* Singleton
+On possible solution to implement this container is to allow a single
+container object (a singleton in object-oriented programming
+terms). Let's declare the public interface in a header file named
+=container.h=:
+
+#+INCLUDE: "./singleton/container.h" src c
+
+We can implement a container with a linked list data structure. We
+will provide and implementation of the container in a source file
+named =container.c= with the following content:
+
+#+INCLUDE: "./singleton/container.c" src c
+
+Finally, let's write a small program to show how to use our initial
+interface, and to test if our implementation works. Thus, let's write
+a small test program in a source file named =test.c= with the
+following content:
+
+#+INCLUDE: "./singleton/test.c" src c
+
+This is all very straightforward. However, we can only have one
+container at a time. What if an application needs to keep two
+containers? We now discuss ways to allow an application to define and
+use multiple containers.
+
+* Objects with Fixed Interface
+If the application needs to use more than one container, then we must
+implement a sort of container object. Therefore, we will have to
+change our public interface as follows:
+ 
+#+INCLUDE: "./fixed/container.h" src c
+
+Notice that we return container object from the =init= function which
+will represent a new container, and we will pass this container to the
+other functions. Then, we can change the implementation of our
+container in the =container.c= source file as follows:
+
+#+INCLUDE: "./fixed/container.c" src c
+
+Finally, let's modify the =test.c= program showing how to use the
+container as follows:
+
+#+INCLUDE: "./fixed/test.c" src c
+
+This design gives the user an opaque structure. This is good in terms
+of modularization, but it has a disadvantage: the user does not have
+any control on how objects should be allocate, i.e. objects can only
+be dynamically allocated.  In fact, the definition of =struct
+container= is kept private inside the =.c= file, so the compiler does
+not see the definition of =struct container= in files that include the
+public interface -- so the application code can not declare an object
+of that type because the compiler would not know how much memory to
+reserve for it.
+
+However, we can change a bit the interface design to allow users to
+decide on object allocation by moving the structure definition into the
+header file. Therefore, the header interface will change as follows:
+
+#+INCLUDE: "./public/container.h" src c
+
+Then, we can change the implementation of our container in the
+=container.c= source file as follows:
+
+#+INCLUDE: "./public/container.c" src c
+
+Finally, let's modify the =test.c= program showing how to use the
+container as follows:
+
+#+INCLUDE: "./public/test.c" src c
+
+Both these object definition styles are also quite easy to use and
+implement. However, notice that it lacks the flexibility to extend the
+functionality of a container. For example, what if we want to provide
+a specialized impelmentation that implements a more efficient data
+structure? In other words, the current implementation allows for
+multiple objects, but it does not support multiple classes with
+dynamic binding and inheritance.  In object-oriented programming, we
+refer to dynamic binding as the ability to figure out the actual
+implementation based on the type at runtime.  Instead, we refer to
+inheritance as the ability to define a new type built based on
+existing ones while maintaining the common behaviors.
