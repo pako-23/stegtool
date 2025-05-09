@@ -1,3 +1,4 @@
+
 #+TITLE: Object-Oriented Programming in C
 
 These notes will be a bit different from the previous ones.  In fact,
@@ -27,20 +28,172 @@ container object (a singleton in object-oriented programming
 terms). Let's declare the public interface in a header file named
 =container.h=:
 
-#+INCLUDE: "./singleton/container.h" src c
+#+begin_src c
+  #ifndef CONTAINER_H_INCLUDED
+  #define CONTAINER_H_INCLUDED
+
+  /**
+   * Initializes a container structure as a singleton returning 0 on
+   * failure, and a non-zero value on success.
+   */
+  int init(void);
+
+  /**
+   * Destroys a container singleton releasing all allocated resources.
+   */
+  void destroy(void);
+
+  /**
+   * Inserts value into the container returing 0 on failure or if value
+   * is already in the container, and a non-zero value on success.
+   */
+  int insert(int value);
+
+  /**
+   * Removes value from the container returning 0 on failure or if the
+   * element does not exist, and a non-zero value on success.
+   */
+  int remove(int value);
+
+  /**
+   * Returns 0 if value is not present into the container, and a
+   * non-zero if value is present.
+   */
+  int find(int value);
+
+  #endif
+#+end_src
 
 We can implement a container with a linked list data structure. We
 will provide and implementation of the container in a source file
 named =container.c= with the following content:
 
-#+INCLUDE: "./singleton/container.c" src c
+#+begin_src c
+  #include "container.h"
+  #include <stdlib.h>
+
+
+  /* Define node of a linked list */
+  struct node {
+      int value;
+      struct node *next;
+  };
+
+  /**
+   * Define the head of the linked list as a global static variable. The
+   * static keyword refers to the fact that this variable cannot be
+   * accessed from outside of this source file.
+   */
+  static struct node *head = NULL;
+
+  /* We simply return a non-zero value since the head is already NULL. */
+  int init(void) { return 1; }
+
+  void destroy(void)
+  {
+      struct node *tmp;
+
+      while (head) {
+	  tmp = head;
+	  head = head->next;
+	  free(tmp);
+      }
+  }
+
+  int insert(int value)
+  {
+      struct node *node;
+
+      if (find(value) != 0) return 0;
+
+      if ((node = malloc(sizeof(struct node))) == NULL)
+	  return 0;
+
+      node->value = value;
+      node->next = head;
+      head = node;
+
+      return 1;
+  }
+
+  int remove(int value)
+  {
+      struct node *p, *tmp;
+
+      if (head == NULL) return 0;
+
+      if (head->value == value) {
+	  tmp = head;
+	  head = head->next;
+	  free(tmp);
+	  return 1;
+      }
+
+      for (p = head; p->next; p = p->next) {
+	  if (p->next->value == value) {
+	      tmp = p->next;
+	      p->next = p->next->next;
+	      free(tmp);
+	      return 1;
+	  }
+      }
+
+      return 0;
+  }
+
+  int find(int value)
+  {
+      struct node *p;
+
+      for (p = head; p; p = p->next)
+	  if (p->value == value)
+	      return 1;
+
+      return 0;
+  }
+#+end_src
 
 Finally, let's write a small program to show how to use our initial
 interface, and to test if our implementation works. Thus, let's write
 a small test program in a source file named =test.c= with the
 following content:
 
-#+INCLUDE: "./singleton/test.c" src c
+#+begin_src c
+  #include "container.h"
+  /**
+   * Include assert.h header to use the assert function. The assert
+   * function takes an expression. If the expression is false, it
+   * terminates the program reporting a failure.
+   */
+  #include <assert.h>
+  #include <stdlib.h>
+
+
+  int main(void)
+  {
+      assert(init() != 0);
+
+      assert(insert(10) != 0);
+      assert(insert(20) != 0);
+      assert(insert(20) == 0);
+
+      assert(find(20) != 0);
+      assert(find(21) == 0);
+
+      assert(remove(1) == 0);
+      assert(remove(10) != 0);
+      assert(remove(20) != 0);
+      assert(remove(12) == 0);
+
+      assert(insert(10) != 0);
+      assert(remove(10) != 0);
+      assert(insert(10) != 0);
+
+      destroy();
+
+      return EXIT_SUCCESS;
+  }
+#+end_src
 
 This is all very straightforward. However, we can only have one
 container at a time. What if an application needs to keep two
@@ -52,19 +205,178 @@ If the application needs to use more than one container, then we must
 implement a sort of container object. Therefore, we will have to
 change our public interface as follows:
  
-#+INCLUDE: "./fixed/container.h" src c
+#+begin_src c
+  #ifndef CONTAINER_H_INCLUDED
+  #define CONTAINER_H_INCLUDED
+
+  struct container;
+
+  /**
+   * Creates a new container object. It returns a valid pointer on
+   * success; otherwise, it returns a NULL pointer.
+   */
+  struct container *init(void);
+
+  /**
+   * Destroys a container object releasing all allocated resources.
+   */
+  void destroy(struct container *c);
+
+  /**
+   * Inserts value into the container returing 0 on failure or if value
+   * is already in the container, and a non-zero value on success.
+   */
+  int insert(struct container *c, int value);
+
+  /**
+   * Removes value from the container returning 0 on failure or if the
+   * element does not exist, and a non-zero value on success.
+   */
+  int remove(struct container *c, int value);
+
+  /**
+   * Returns 0 if value is not present into the container, and a
+   * non-zero if value is present.
+   */
+  int find(struct container *c, int value);
+
+  #endif
+#+end_src
 
 Notice that we return container object from the =init= function which
 will represent a new container, and we will pass this container to the
 other functions. Then, we can change the implementation of our
 container in the =container.c= source file as follows:
 
-#+INCLUDE: "./fixed/container.c" src c
+#+begin_src c
+  #include "container.h"
+  #include <stdlib.h>
+
+
+  /* Define node of a linked list */
+  struct node {
+      int value;
+      struct node *next;
+  };
+
+  /* We create a structure container the head of the linked list. */
+  struct container {
+      struct node *head;
+  };
+
+  struct container *init(void)
+  {
+      struct container *c;
+
+      if ((c = malloc(sizeof(struct container))) == NULL)
+	  return NULL;
+
+      c->head = NULL;
+
+      return c;
+  }
+
+  void destroy(struct container *c)
+  {
+      struct node *tmp;
+
+      while (c->head) {
+	  tmp = c->head;
+	  c->head = c->head->next;
+	  free(tmp);
+      }
+
+      free(c);
+  }
+
+  int insert(struct container *c, int value)
+  {
+      struct node *node;
+
+      if (find(c, value) != 0) return 0;
+
+      if ((node = malloc(sizeof(struct node))) == NULL)
+	  return 0;
+
+      node->value = value;
+      node->next = c->head;
+      c->head = node;
+
+      return 1;
+  }
+
+  int remove(struct container *c, int value)
+  {
+      struct node *p, *tmp;
+
+      if (c->head == NULL) return 0;
+
+      if (c->head->value == value) {
+	  tmp = c->head;
+	  c->head = c->head->next;
+	  free(tmp);
+	  return 1;
+      }
+
+      for (p = c->head; p->next; p = p->next) {
+	  if (p->next->value == value) {
+	      tmp = p->next;
+	      p->next = p->next->next;
+	      free(tmp);
+	      return 1;
+	  }
+      }
+
+      return 0;
+  }
+
+  int find(struct container *c, int value)
+  {
+      struct node *p;
+
+      for (p = c->head; p; p = p->next)
+	  if (p->value == value)
+	      return 1;
+
+      return 0;
+  }
+#+end_src
 
 Finally, let's modify the =test.c= program showing how to use the
 container as follows:
 
-#+INCLUDE: "./fixed/test.c" src c
+#+begin_src c
+  #include "container.h"
+  #include <assert.h>
+  #include <stdlib.h>
+
+  int main(void)
+  {
+      struct container *c = init();
+
+      assert(c != NULL);
+
+      assert(insert(c, 10) != 0);
+      assert(insert(c, 20) != 0);
+      assert(insert(c, 20) == 0);
+
+      assert(find(c, 20) != 0);
+      assert(find(c, 21) == 0);
+
+      assert(remove(c, 1) == 0);
+      assert(remove(c, 10) != 0);
+      assert(remove(c, 20) != 0);
+      assert(remove(c, 12) == 0);
+
+      assert(insert(c, 10) != 0);
+      assert(remove(c, 10) != 0);
+      assert(insert(c, 10) != 0);
+
+      destroy(c);
+
+      return EXIT_SUCCESS;
+  }
+#+end_src
 
 This design gives the user an opaque structure. This is good in terms
 of modularization, but it has a disadvantage: the user does not have
@@ -80,17 +392,172 @@ However, we can change a bit the interface design to allow users to
 decide on object allocation by moving the structure definition into the
 header file. Therefore, the header interface will change as follows:
 
-#+INCLUDE: "./public/container.h" src c
+#+begin_src c
+  #ifndef CONTAINER_H_INCLUDED
+  #define CONTAINER_H_INCLUDED
+
+  struct node;
+
+  struct container {
+      struct node *head;
+  };
+
+  /**
+   * Initializes a container object. It takes a pointer to an allocated
+   * container, and initializes its internal members.  It returns 0 on
+   * failure, and non-zero on success.
+   */
+  int init(struct container *c);
+
+  /**
+   * Destroys a container object releasing all allocated resources.
+   */
+  void destroy(struct container *c);
+
+  /**
+   * Inserts value into the container returing 0 on failure or if value
+   * is already in the container, and a non-zero value on success.
+   */
+  int insert(struct container *c, int value);
+
+  /**
+   * Removes value from the container returning 0 on failure or if the
+   * element does not exist, and a non-zero value on success.
+   */
+  int remove(struct container *c, int value);
+
+  /**
+   * Returns 0 if value is not present into the container, and a
+   * non-zero if value is present.
+   */
+  int find(struct container *c, int value);
+
+  #endif
+#+end_src
 
 Then, we can change the implementation of our container in the
 =container.c= source file as follows:
 
-#+INCLUDE: "./public/container.c" src c
+#+begin_src c
+  #include "container.h"
+  #include <stdlib.h>
+
+  /* Define node of a linked list */
+  struct node {
+      int value;
+      struct node *next;
+  };
+
+  int init(struct container *c)
+  {
+      c->head = NULL;
+      return 1;
+  }
+
+  void destroy(struct container *c)
+  {
+      struct node *tmp;
+
+      while (c->head) {
+	  tmp = c->head;
+	  c->head = c->head->next;
+	  free(tmp);
+      }
+      /**
+       * We do not own the container, it is responsibility of the caller
+       * to deallocate it.
+       */
+  }
+
+  int insert(struct container *c, int value)
+  {
+      struct node *node;
+
+      if (find(c, value) != 0) return 0;
+
+      if ((node = malloc(sizeof(struct node))) == NULL)
+	  return 0;
+
+      node->value = value;
+      node->next = c->head;
+      c->head = node;
+
+      return 1;
+  }
+
+  int remove(struct container *c, int value)
+  {
+      struct node *p, *tmp;
+
+      if (c->head == NULL) return 0;
+
+      if (c->head->value == value) {
+	  tmp = c->head;
+	  c->head = c->head->next;
+	  free(tmp);
+	  return 1;
+      }
+
+      for (p = c->head; p->next; p = p->next) {
+	  if (p->next->value == value) {
+	      tmp = p->next;
+	      p->next = p->next->next;
+	      free(tmp);
+	      return 1;
+	  }
+      }
+
+      return 0;
+  }
+
+  int find(struct container *c, int value)
+  {
+      struct node *p;
+
+      for (p = c->head; p; p = p->next)
+	  if (p->value == value)
+	      return 1;
+
+      return 0;
+  }
+#+end_src
 
 Finally, let's modify the =test.c= program showing how to use the
 container as follows:
 
-#+INCLUDE: "./public/test.c" src c
+#+begin_src c
+  #include "container.h"
+  #include <assert.h>
+  #include <stdlib.h>
+
+  int main(void)
+  {
+      // Now the container is allocated on the stack
+      struct container c;
+
+      assert(init(&c) != 0);
+
+      assert(insert(&c, 10) != 0);
+      assert(insert(&c, 20) != 0);
+      assert(insert(&c, 20) == 0);
+
+      assert(find(&c, 20) != 0);
+      assert(find(&c, 21) == 0);
+
+      assert(remove(&c, 1) == 0);
+      assert(remove(&c, 10) != 0);
+      assert(remove(&c, 20) != 0);
+      assert(remove(&c, 12) == 0);
+
+      assert(insert(&c, 10) != 0);
+      assert(remove(&c, 10) != 0);
+      assert(insert(&c, 10) != 0);
+
+      destroy(&c);
+
+      return EXIT_SUCCESS;
+  }
+#+end_src
 
 Both these object definition styles are also quite easy to use and
 implement. However, notice that it lacks the flexibility to extend the
