@@ -215,7 +215,7 @@ through a =void *=, as shown in the following code.
       q = x;                          /* x can be converted into any pointer type */
 
       assert (q == &i);               /* the implicit conversions maintain
-					 the original pointer value (address) */
+                                         the original pointer value (address) */
   }
 #+END_SRC
 

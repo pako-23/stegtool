@@ -140,7 +140,7 @@ the following code, what will be the output if you run it?
   {
       int x = 10;
       increment(x); // passing a copy of x
-      printf("inside main: %d\n", x); // 
+      printf("inside main: %d\n", x); 
   }
 #+END_SRC
 

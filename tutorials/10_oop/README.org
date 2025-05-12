@@ -1,4 +1,3 @@
-
 #+TITLE: Object-Oriented Programming in C
 
 These notes will be a bit different from the previous ones.  In fact,
@@ -44,7 +43,7 @@ terms). Let's declare the public interface in a header file named
   void destroy(void);
 
   /**
-   * Inserts value into the container returing 0 on failure or if value
+   * Inserts value into the container returning 0 on failure or if value
    * is already in the container, and a non-zero value on success.
    */
   int insert(int value);
@@ -223,7 +222,7 @@ change our public interface as follows:
   void destroy(struct container *c);
 
   /**
-   * Inserts value into the container returing 0 on failure or if value
+   * Inserts value into the container returning 0 on failure or if value
    * is already in the container, and a non-zero value on success.
    */
   int insert(struct container *c, int value);
@@ -415,7 +414,7 @@ header file. Therefore, the header interface will change as follows:
   void destroy(struct container *c);
 
   /**
-   * Inserts value into the container returing 0 on failure or if value
+   * Inserts value into the container returning 0 on failure or if value
    * is already in the container, and a non-zero value on success.
    */
   int insert(struct container *c, int value);
@@ -562,7 +561,7 @@ container as follows:
 Both these object definition styles are also quite easy to use and
 implement. However, notice that it lacks the flexibility to extend the
 functionality of a container. For example, what if we want to provide
-a specialized impelmentation that implements a more efficient data
+a specialized implementation that implements a more efficient data
 structure? In other words, the current implementation allows for
 multiple objects, but it does not support multiple classes with
 dynamic binding and inheritance.  In object-oriented programming, we
@@ -570,3 +569,753 @@ refer to dynamic binding as the ability to figure out the actual
 implementation based on the type at runtime.  Instead, we refer to
 inheritance as the ability to define a new type built based on
 existing ones while maintaining the common behaviors.
+
+* Function Pointer
+Before discussing another modularization construct enabling
+extensions, we need to introduce the concept of /function pointer./ A
+function pointer is a pointer to a function, meaning that it is a
+pointer that refers to some code (a function) rather than some data.
+But it is still a pointer, so it is a value that can be stored in
+memory, used in expressions, passed to functions as a parameter,
+returned as a result from a function, etc. As a pointer, it can be
+dereferenced, meaning that we can use whatever the pointer refers to,
+indirectly, through the pointer. In the case of function pointers, it
+can be used to call a function. To illustrate the use of function
+pointers, let's consider a program that reads some lines from the
+input and sorts them.
+
+In our example, we will consider the sorting as composed of two parts:
+a comparison that determines the ordering of any pair of objects
+(often referred as a comparator), and a sorting algorithm that makes
+comparisons and exchanges until the objects are in order. As for the
+sorting algorithm, we will use the =qsort= implementation defined in
+the =stdlib.h= header. The sorting algorithms is completely
+independent of the comparison strategy used. In fact, if we look at
+the declaration of the =qsort= function, the comparator function is
+one of the arguments as a function pointer, i.e. a pointer to some
+code implementing the comparison. The key advantage of using function
+pointers in this context is /flexibility./ Since the sorting algorithm
+does not need to know the specifics of the comparison logic, it can
+work with any data type or sorting criteria, as long as a suitable
+comparator function is provided. This allows the sorting behavior to
+be customized without modifying the sorting algorithm itself -- an
+important principle in modular design. The declaration of the =qsort=
+function shows the syntax to declare a function pointer. The prototype
+of the =qsort= function from the C standard library is the following:
+
+#+begin_src c
+void qsort(void *base, size_t nmemb, size_t size,
+           int (*cmp)(const void *, const void *));
+#+end_src
+
+In the =qsort= declaration, the function pointer in the last
+parameter.  The parameter indicates a function that takes two =const
+void *= arguments (so it can be applied to any type) and return an
+integer.  In this context, the returned integer must be a negative
+value if the first argument is less than the second, zero if they are
+equal, and a positive value if the first is greater than the second.
+Here is a small implementation of a sort utility that orders the
+input:
+
+#+begin_src c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+
+  #define MAX_LINES    1000
+  #define MAX_LINE_LEN 1024
+
+  /**
+   * Here we define the comparator in which we compare two strings. The
+   * input parameters will be passed to the functions as generic
+   * pointers to the two items to compare. We will compare the strings
+   * with strcmp.
+   */
+  int cmp(const void *a, const void *b)
+  {
+      return strcmp(*(const char **)a, *(const char **)b);
+  }
+
+  int main(void)
+  {
+      /* We assume a maximum number of lines for simplicity. */
+      char *lines[MAX_LINES];
+      /* We assume a maximum line length for simplicity. */
+      char buffer[MAX_LINE_LEN];
+      int count = 0;
+
+      for (; count < MAX_LINES && fgets(buffer, sizeof(buffer), stdin); ++count) {
+	  /* Find the first newline and replace it with '\0' when found */
+	  char *p = strchr(buffer, '\n');
+	  if (p != NULL) *p = '\0';
+
+	  /* We allocate and copy the input line. */
+	  lines[count] = strdup(buffer);
+	  if (lines[count] == NULL) goto error;
+      }
+
+      /* We sort the lines with the comparator we defined. */
+      qsort(lines, count, sizeof(char *), cmp);
+
+      for (int i = 0; i < count; ++i) {
+	  printf("%s\n", lines[i]);
+	  free(lines[i]);
+      }
+
+      return EXIT_SUCCESS;
+
+   error:
+      for (int i = 0; i < count; ++i)
+	  free(lines[i]);
+
+      return EXIT_FAILURE;
+  }
+#+end_src
+
+In the program above, we read some lines, we sort them, and we output
+them. Our implementation sorts line in lexicographical order. That
+means that numbers will not be sorted. What if we want to allow an
+=-n= option that sorts lines containing a number? Well, thanks to
+function pointers it is not too big of an extension. Here is how we
+can extend our implementation to allow the sorting of numbers:
+
+#+begin_src c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+
+  #define MAX_LINES    1000
+  #define MAX_LINE_LEN 1024
+
+  /**
+   * Here we define the comparator in which we compare two strings. The
+   * input parameters will be passed to the functions as generic
+   * pointers to the two items to compare. We will compare the strings
+   * with strcmp.
+   */
+  int cmp(const void *a, const void *b)
+  {
+      return strcmp(*(const char **)a, *(const char **)b);
+  }
+
+  /* We define a function to compare numbers. */
+  int cmp_int(const void *a, const void *b)
+  {
+      /* Convert the two strings as integers. */
+      int ia = atoi(*(const char **)a);
+      int ib = atoi(*(const char **)b);
+      return ia - ib;
+  }
+
+  int main(int argc, char *argv[])
+  {
+      /* We assume a maximum number of lines for simplicity. */
+      char *lines[MAX_LINES];
+      /* We assume a maximum line length for simplicity. */
+      char buffer[MAX_LINE_LEN];
+      int count = 0;
+
+      for (; count < MAX_LINES && fgets(buffer, sizeof(buffer), stdin); ++count) {
+	  char *p = strchr(buffer, '\n');
+	  if (p != NULL) *p = '\0';
+
+	  /* We allocate and copy the input line. */
+	  lines[count] = strdup(buffer);
+	  if (lines[count] == NULL) goto error;
+      }
+
+      /* When the there is the -n argument use integer comparison */
+      if (argc == 2 && strcmp(argv[1], "-n") == 0)
+	  qsort(lines, count, sizeof(char *), cmp_int);
+      else
+	  /* Default to normal strcmp-based comparator */
+	  qsort(lines, count, sizeof(char *), cmp);
+
+      for (int i = 0; i < count; ++i) {
+	  printf("%s\n", lines[i]);
+	  free(lines[i]);
+      }
+
+      return EXIT_SUCCESS;
+
+   error:
+      for (int i = 0; i < count; ++i)
+	  free(lines[i]);
+
+      return EXIT_FAILURE;
+  }
+#+end_src
+
+The code above shows that such an extension did not require too many
+code changes. In fact, all we had to do was to define a new comparator
+(=cmp_int=), and pass it as an argument to =qsort= when =-n= is in the
+arguments.  In essence, function pointers allow us to pass a behavior
+to an existing implementation, achieving modular, extensible, and
+flexible code.
+
+* Per-Object Virtual Table
+Function pointers provide an elegant way to switch between
+implementations of a functionality on an object, so to implement
+dynamic binding. Function pointers allow to implement a /virtual
+table./ A virtual table is simply a table of function pointers that
+correspond to the operations supported by the object, and each object
+implementation of that object must provide its own version of this
+table. The simplest way of implementing a virtual table is to store
+each function pointer directly in the object. Now, let's see how we
+can use a virtual table to implement a generic version of our
+container object.  Let's first look at how the =container.h= header
+file changes:
+
+#+begin_src c
+  #ifndef CONTAINER_H_INCLUDED
+  #define CONTAINER_H_INCLUDED
+
+  /**
+   * Here we define an interface for a container. An interface is simply
+   * a set of operations. Concrete implementations must proved the
+   * actual implementation for all the operations required by this
+   * interface.
+   */
+  struct container;
+
+  /**
+   * Here we define a concrete implementation for the container object
+   * using a linked list.
+   */
+  struct list_container;
+
+  /**
+   * Creates a new container object using the list implementation. It
+   * returns a valid pointer on success; otherwise, it returns a NULL
+   * pointer.
+   */
+  struct list_container *list_init(void);
+
+  /**
+   * Destroys a container object releasing all allocated resources.
+   */
+  void destroy(struct container *c);
+
+  /**
+   * Inserts value into the container returning 0 on failure or if value
+   * is already in the container, and a non-zero value on success.
+   */
+  int insert(struct container *c, int value);
+
+  /**
+   * Removes value from the container returning 0 on failure or if the
+   * element does not exist, and a non-zero value on success.
+   */
+  int remove(struct container *c, int value);
+
+  /**
+   * Returns 0 if value is not present into the container, and a
+   * non-zero if value is present.
+   */
+  int find(struct container *c, int value);
+
+  #endif
+#+end_src
+
+Then, we can change the implementation of our container in the
+=container.c= source file as follows:
+
+#+begin_src c
+  #include "container.h"
+  #include <stdlib.h>
+
+  /**
+   * Here we define the virtual table for the container
+   * interface. Essentially, we define each operation supported by
+   * container object as a structure member of type function pointer.
+   * In object-oriented programming, this is called the super-class.
+   */
+  struct container {
+      void (*destroy)(struct container *);
+      int (*insert)(struct container *, int);
+      int (*remove)(struct container *, int);
+      int (*find)(struct container *, int);
+  };
+
+  /* Define node of a linked list */
+  struct node {
+      int value;
+      struct node *next;
+  };
+
+  /**
+   * Now we define the type for the container using a linked list
+   * implementation. In object-oriented programming, this is called the
+   * sub-class.
+   */
+  struct list_container {
+      /**
+       * The first element of the sub-class MUST be the super-class. The
+       * sub-class requires the virtual table defined by the super-class
+       * to implement the dynamic dispatch.  The super-class must be the
+       * first element because the first element because the C compiler
+       * will guarantee that the first field of a structure will not be
+       * reordered.  That means that struct list_container * can be
+       * treated as a struct container *, so given a pointer we can
+       * directly access the virtual table for the super-class.
+       */
+      struct container super;
+
+      /**
+       * Here we define the members required by the concrete
+       * implementation.
+       */
+      struct node *head;
+  };
+
+
+  /**
+   * Here we define the concrete implementations for the operations
+   * supported by the linked list container version of our container
+   * interface.
+   */
+  static void list_destroy(struct container *c)
+  {
+      struct node *tmp;
+      struct list_container *l = (struct list_container *) c;
+
+      while (l->head) {
+	  tmp = l->head;
+	  l->head = l->head->next;
+	  free(tmp);
+      }
+
+      free(c);
+  }
+
+  static int list_insert(struct container *c, int value)
+  {
+      struct node *node;
+      struct list_container *l = (struct list_container *) c;
+
+      if (find(c, value) != 0) return 0;
+
+      if ((node = malloc(sizeof(struct node))) == NULL)
+	  return 0;
+
+      node->value = value;
+      node->next = l->head;
+      l->head = node;
+
+      return 1;
+  }
+
+  static int list_remove(struct container *c, int value)
+  {
+      struct node *p, *tmp;
+      struct list_container *l = (struct list_container *) c;
+
+      if (l->head == NULL) return 0;
+
+      if (l->head->value == value) {
+	  tmp = l->head;
+	  l->head = l->head->next;
+	  free(tmp);
+	  return 1;
+      }
+
+      for (p = l->head; p->next; p = p->next) {
+	  if (p->next->value == value) {
+	      tmp = p->next;
+	      p->next = p->next->next;
+	      free(tmp);
+	      return 1;
+	  }
+      }
+
+      return 0;
+  }
+
+  static int list_find(struct container *c, int value)
+  {
+      struct node *p;
+      struct list_container *l = (struct list_container *) c;
+
+      for (p = l->head; p; p = p->next)
+	  if (p->value == value)
+	      return 1;
+
+      return 0;
+  }
+
+  /* We now define the public interface. */
+  struct list_container *list_init(void)
+  {
+      struct list_container *c;
+
+      if ((c = malloc(sizeof(struct list_container))) == NULL)
+	  return NULL;
+
+      /**
+       * We initialize the virtual table with the concrete
+       * implementation for the linked list implementation.
+       */
+      c->super.destroy = list_destroy;
+      c->super.insert = list_insert;
+      c->super.remove = list_remove;
+      c->super.find = list_find;
+
+      c->head = NULL;
+
+      return c;
+  }
+
+  void destroy(struct container *c)
+  {
+      c->destroy(c);
+  }
+
+  int insert(struct container *c, int valu)e
+  {
+      return c->insert(c, value);
+  }
+
+  int remove(struct container *c, int value)
+  {
+      return c->remove(c, value);
+  }
+
+  int find(struct container *c, int value)
+  {
+      return c->find(c, value);
+  }
+#+end_src
+
+Finally, let's modify the =test.c= program showing how to use the
+container as follows:
+
+#+begin_src c
+  #include "container.h"
+  #include <assert.h>
+  #include <stdlib.h>
+
+  int main(void)
+  {
+      /**
+       * We instantiate a list container and we treat it as a generic
+       * container. Therefore, we can have code using a generic
+       * container, and we can easily switch between container
+       * implementations.
+       */
+      struct container *c = (struct container *) list_init();
+
+      assert(c != NULL);
+
+      assert(insert(c, 10) != 0);
+      assert(insert(c, 20) != 0);
+      assert(insert(c, 20) == 0);
+
+      assert(find(c, 20) != 0);
+      assert(find(c, 21) == 0);
+
+      assert(remove(c, 1) == 0);
+      assert(remove(c, 10) != 0);
+      assert(remove(c, 20) != 0);
+      assert(remove(c, 12) == 0);
+
+      assert(insert(c, 10) != 0);
+      assert(remove(c, 10) != 0);
+      assert(insert(c, 10) != 0);
+
+      destroy(c);
+
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+This is an elegant solution because the indirect calls for each
+specific implementation depend on the dynamic type of an object. These
+calls are often referred as /virtual calls./ This implementation also
+solves the problem of extensibility. Adding a new container
+implementation will only require us to define a new concrete type and
+setup the virtual table for this new object.  For example, imagine we
+want to add a new container implementation based on variable length
+arrays.  We would have to define a new structure that embeds the
+container structure. Then, we would have to implement the operations
+for the container interface on this new type, and setup the virtual
+table for this new structure in its initialization. The application
+code will not change much. For instance, in the =test.c= file we will
+only have to change the way we initialize the container. At the same
+time, we are not touching any of the already existing code.
+
+* Per-Class Virtual Table
+Having a virtual table already solves most of our initial problems, so
+what is left for improvement? Well, our initial solution is quite
+memory intensive. Imagine a structure supporting many operations. For
+each object, we instantiate we will have to have to record a function
+pointer for each operation. At the same time, these pointers will
+point to the same code for each object. In fact, they do not depend on
+the object instance, but on the type. For example, a objects with a
+linked-list container implementation will have their always virtual
+table pointing to the same implementation, and objects with array
+container implementation will have their virtual table pointing to
+their implementation.  Therefore, what about extracting the virtual
+table from the object instance, and having only one per each type we
+define? This is going to be the last improvement we will implement,
+and it is also how most object-oriented programming languages
+implement a virtual table. As usual, let's start from the public
+interface =container.h= which we will leave unchanged:
+
+#+begin_src c
+  #ifndef CONTAINER_H_INCLUDED
+  #define CONTAINER_H_INCLUDED
+
+  /**
+   * Here we define an interface for a container. An interface is simply
+   * a set of operations. Concrete implementations must proved the
+   * actual implementation for all the operations required by this
+   * interface.
+   */
+  struct container;
+
+  /**
+   * Here we define a concrete implementation for the container object
+   * using a linked list.
+   */
+  struct list_container;
+
+  /**
+   * Creates a new container object using the list implementation. It
+   * returns a valid pointer on success; otherwise, it returns a NULL
+   * pointer.
+   */
+  struct list_container *list_init(void);
+
+  /**
+   * Destroys a container object releasing all allocated resources.
+   */
+  void destroy(struct container *c);
+
+  /**
+   * Inserts value into the container returning 0 on failure or if value
+   * is already in the container, and a non-zero value on success.
+   */
+  int insert(struct container *c, int value);
+
+  /**
+   * Removes value from the container returning 0 on failure or if the
+   * element does not exist, and a non-zero value on success.
+   */
+  int remove(struct container *c, int value);
+
+  /**
+   * Returns 0 if value is not present into the container, and a
+   * non-zero if value is present.
+   */
+  int find(struct container *c, int value);
+
+  #endif
+#+end_src
+
+Also, the =test.c= file will be left unchanged:
+
+#+begin_src c
+  #include "container.h"
+  #include <assert.h>
+  #include <stdlib.h>
+
+  int main(void)
+  {
+      /**
+       * We instantiate a list container and we treat it as a generic
+       * container. Therefore, we can have code using a generic
+       * container, and we can easily switch between container
+       * implementations.
+       */
+      struct container *c = (struct container *) list_init();
+
+      assert(c != NULL);
+
+      assert(insert(c, 10) != 0);
+      assert(insert(c, 20) != 0);
+      assert(insert(c, 20) == 0);
+
+      assert(find(c, 20) != 0);
+      assert(find(c, 21) == 0);
+
+      assert(remove(c, 1) == 0);
+      assert(remove(c, 10) != 0);
+      assert(remove(c, 20) != 0);
+      assert(remove(c, 12) == 0);
+
+      assert(insert(c, 10) != 0);
+      assert(remove(c, 10) != 0);
+      assert(insert(c, 10) != 0);
+
+      destroy(c);
+
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+We will operate our changes in the interface implementation, so the
+=container.c= file will become as follows:
+
+#+begin_src c
+  #include "container.h"
+  #include <stdlib.h>
+
+
+  /* We define a new type for the virtual table. */
+  struct container_ops {
+      void (*destroy)(struct container *);
+      int (*insert)(struct container *, int);
+      int (*remove)(struct container *, int);
+      int (*find)(struct container *, int);
+  };
+
+  /* We define the container super-class. */
+  struct container {
+      /* Now the container only has a pointer to the virtual table. */
+      const struct container_ops *ops;
+  };
+
+  /* Define node of a linked list */
+  struct node {
+      int value;
+      struct node *next;
+  };
+
+
+  /* The sub-class definition will be mostly unchanged. */
+  struct list_container {
+      struct container super;
+      struct node *head;
+  };
+
+
+  /**
+   * Here we define the concrete implementations for the operations
+   * supported by the linked list container version of our container
+   * interface.
+   */
+  static void list_destroy(struct container *c)
+  {
+      struct node *tmp;
+      struct list_container *l = (struct list_container *) c;
+
+      while (l->head) {
+	  tmp = l->head;
+	  l->head = l->head->next;
+	  free(tmp);
+      }
+
+      free(c);
+  }
+
+  static int list_insert(struct container *c, int value)
+  {
+      struct node *node;
+      struct list_container *l = (struct list_container *) c;
+
+      if (find(c, value) != 0) return 0;
+
+      if ((node = malloc(sizeof(struct node))) == NULL)
+	  return 0;
+
+      node->value = value;
+      node->next = l->head;
+      l->head = node;
+
+      return 1;
+  }
+
+  static int list_remove(struct container *c, int value)
+  {
+      struct node *p, *tmp;
+      struct list_container *l = (struct list_container *) c;
+
+      if (l->head == NULL) return 0;
+
+      if (l->head->value == value) {
+	  tmp = l->head;
+	  l->head = l->head->next;
+	  free(tmp);
+	  return 1;
+      }
+
+      for (p = l->head; p->next; p = p->next) {
+	  if (p->next->value == value) {
+	      tmp = p->next;
+	      p->next = p->next->next;
+	      free(tmp);
+	      return 1;
+	  }
+      }
+
+      return 0;
+  }
+
+  static int list_find(struct container *c, int value)
+  {
+      struct node *p;
+      struct list_container *l = (struct list_container *) c;
+
+      for (p = l->head; p; p = p->next)
+	  if (p->value == value)
+	      return 1;
+
+      return 0;
+  }
+
+  /**
+   * Here we define the virtual table for the container using a
+   * linked-list implementation.  Notice that there will be only one
+   * instance of this virtual table, and object instances will simply
+   * contain a pointer to it.
+   */
+  static const struct container_ops list_container_vtable = {
+      .destroy = list_destroy,
+      .insert = list_insert,
+      .remove = list_remove,
+      .find = list_find,
+  };
+
+  /* We now define the public interface. */
+  struct list_container *list_init(void)
+  {
+      struct list_container *c;
+
+      if ((c = malloc(sizeof(struct list_container))) == NULL)
+	  return NULL;
+
+      /**
+       * We initialize the virtual table with the concrete
+       * implementation for the linked list implementation.
+       */
+      c->super.ops = &list_container_vtable;
+      c->head = NULL;
+
+      return c;
+  }
+
+  void destroy(struct container *c)
+  {
+      c->ops->destroy(c);
+  }
+
+  int insert(struct container *c, int value)
+  {
+      return c->ops->insert(c, value);
+  }
+
+  int remove(struct container *c, int value)
+  {
+      return c->ops->remove(c, value);
+  }
+
+  int find(struct container *c, int value)
+  {
+      return c->ops->find(c, value);
+  }
+#+end_src
+
+* Exercise 1
+Extend the container implementation from the per-class virtual table
+section by adding a variable-length array implementation. You can use
+some of the code from the second exercise of the seventh tutorial.

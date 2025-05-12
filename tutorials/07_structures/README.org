@@ -487,7 +487,6 @@ have enough room for the new item. Usually, we allocate a new array
 that is double the capacity, we copy the content of the old one into
 the new one, and we release the old one.
 
-
 * Exercise 2
 In the first exercise, whenever you did not have enough room to add a
 new value, you were allocating a new array with double size, copying
