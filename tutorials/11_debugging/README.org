@@ -1,0 +1,467 @@
+#+TITLE: An Introduction to GDB
+When writing a program, it is almost inevitable that things do not
+work as expected.  That means that the program might crash
+unexpectedly, behave strangely, or produce results that do not make
+any sense. The type of errors are often referred as /bugs./ In
+general, bug is a design defect in an engineered system that causes an
+undesired result. Notice that these are programming errors or logic
+errors that the compiler is not able to check. In fact, a program
+might not behave as expected even if it compiles cleanly.  When a
+program contains some bugs often, we have to /debug/ it. Debugging is
+the process of finding and fixing bugs in a program.  During
+debugging, one of the most valuable tools you can turn to is a
+debugger. For the C language, the most widely used debugger is
+GDB. Like many debuggers, GDB is an extremely powerful tool that
+allows to pause the execution of a program, look at its state, and
+examine what is happening. Instead of relying on guesswork or =printf=
+statements scattered all over your code, GDB allows you to step
+through the program methodically, watching its state change as it
+runs. In these notes, we will go through some of the features offered
+by GDB.
+
+* Debugging Symbols
+Before you can use GDB effectively, your program needs to be compiled
+in a way that preserves extra information about your source code. Such
+information includes line numbers, variable names, variable types,
+etc. This information is what allows GDB to show you not just the raw
+memory contents, but the actual lines of your C code and the names of
+your variables.  Normally, the compiler removes such information to
+reduce the size of the resulting binary (the machine does not need
+those to execute the program).
+
+When compiling a program, you can request the compiler to explicitly
+keep the debugging information via the =-g= flag. Optionally, you can
+also add a level to specify how much information should be kept.  In
+general, the best solution is to use the third level, so you can
+compile the program with the =-g3= option.  The third level includes
+extra information, such as all the macro definitions present in the
+program.
+
+* Starting GDB
+For our discussion, let's consider the debugging of the following
+simple program:
+
+#+begin_src c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <ctype.h>
+
+  #define MAX_INPUT 32
+
+  int count_words(const char *text)
+  {
+      int count = 0;
+      int in_word = 0;
+
+      for (const char *p = text; *p; p++) {
+	  if (isspace(*p)) {
+	      if (in_word) {
+		  count++;
+		  in_word = 0;
+	      }
+	  } else {
+	      in_word = 1;
+	  }
+      }
+
+      return count;
+  }
+
+  int total_letters(const char *text)
+  {
+      int total = 0;
+
+      for (int i = 0; text[i] != '\0'; i++)
+	  if (isalpha(text[i]))
+	      total++;
+
+      return total;
+  }
+
+  char *get_user_input(void)
+  {
+      char *buffer = NULL;
+      printf("Enter a sentence: ");
+      fgets(buffer, MAX_INPUT, stdin);
+      return buffer;
+  }
+
+  int main(void)
+  {
+      char *input = get_user_input();
+      int words = count_words(input);
+      int letters = total_letters(input);
+
+      printf("Words: %d\n", words);
+      printf("Letters: %d\n", letters);
+
+      if (words > 0)
+	  printf("Average word length: %.2f\n", (double)letters / words);
+
+      free(input);
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+If you compile and run this program, you should get a segmentation
+fault.  Maybe you already figured out why it happens, but let's try to
+use GDB to identify the cause of the failure. First of all, we have to
+compile the program to include the debugging information. Assuming
+that the program is into a file named =prog.c=, we have to run the
+following command:
+
+#+begin_src sh
+  gcc -g3 -o prog prog.c
+#+end_src
+
+Once your program is compiled with debugging information, starting GDB
+is simple:
+
+#+begin_src sh
+  gdb ./prog
+#+end_src
+
+You will enter an interactive environment with a prompt that looks
+like this:
+
+#+begin_example
+  (gdb)
+#+end_example
+
+At this point, your program is not running yet.  It has been loaded
+by GDB, and it is waiting for you to tell it what to do. The first
+command we will look at is the =help= command. The =help= allows to
+display some description of other commands.  Therefore, it can that
+another command as argument. If =all= is given as an argument, GDB
+will list all the available commands, as shown here:
+
+#+begin_example
+  (gdb) help all
+  Command class: aliases
+
+
+  Command class: breakpoints
+
+  awatch -- Set an access watchpoint for EXPRESSION.
+  break, brea, bre, br, b -- Set breakpoint at specified location.
+  break-range -- Set a breakpoint for an address range.
+  catch -- Set catchpoints to catch events.
+#+end_example
+
+* Inspecting the Backtrace
+Now let's try to figure out how we can locate the source of the
+segmentation fault in our initial program. We can get the line where
+the segmentation fault happens by looking at the /backtrace./ A
+backtrace is the series of currently active function calls for the
+program.  Let's first run the program in GDB. We can start the program
+in GDB via the =run= command. Let's look at the help page for the
+=run= command:
+
+#+begin_example
+  (gdb) help run
+  run, r
+  Start debugged program.
+  You may specify arguments to give it.
+  Args may include "*", or "[...]"; they are expanded using the
+  shell that will start the program (specified by the "$SHELL" environment
+  variable).  Input and output redirection with ">", "<", or ">>"
+  are also allowed.
+
+  With no arguments, uses arguments last specified (with "run" or
+  "set args").  To cancel previous arguments and run with no arguments,
+  use "set args" without arguments.
+
+  To start the inferior without using a shell, use "set startup-with-shell off".
+#+end_example
+
+Essentially, =run= allows to specify a list of arguments that will be
+passed as command line arguments to the running program. After you
+start the program, you will be prompted for a line of text and then
+the program will fail. You should have something similar to the
+following:
+
+#+begin_example
+  (gdb) run 
+  Starting program: /tmp/prog 
+  [Thread debugging using libthread_db enabled]
+  Using host libthread_db library "/lib64/libthread_db.so.1".
+  Enter a sentence: here is some text to analyze 
+
+  Program received signal SIGSEGV, Segmentation fault.
+  0x00007ffff7e09e50 in _IO_getline_info () from /lib64/libc.so.6
+  Missing rpms, try: dnf --enablerepo='*debug*' install glibc-debuginfo-2.40-25.fc41.x86_64
+  (gdb) 
+#+end_example
+
+Now, we can issue the =backtrace= command to determine the location of
+the program failure, as shown below:
+
+#+begin_example
+  (gdb) backtrace 
+  #0  0x00007ffff7e09e50 in _IO_getline_info () from /lib64/libc.so.6
+  #1  0x00007ffff7e08b76 in fgets () from /lib64/libc.so.6
+  #2  0x00000000004012b2 in get_user_input () at prog.c:42
+  #3  0x00000000004012c5 in main () at prog.c:48
+#+end_example
+
+By looking at the backtrace, we notice that the problem is at line 42
+of out program. GDB also allows to move on the call stack to identify
+the problem. We can use the =up= command to move up in the call stack
+by a given amount of frames.  Similarly, we can use the =down= command
+to move down in the call stack. Looking at the backtrace, we can use
+the =up= command to see the failing instruction at line 42 of the
+program by moving up by two in the backtrace:
+
+#+begin_example
+  (gdb) up 2
+  #2  0x00000000004012b2 in get_user_input () at prog.c:42
+  42            fgets(buffer, MAX_INPUT, stdin);
+#+end_example
+
+Finally, we can examine the contents of the arguments passed to the
+=fgets= function via the =print= command:
+
+#+begin_example
+  (gdb) print buffer
+  $1 = 0x0
+#+end_example
+
+We call =fgets= to read a line from the input, but the buffer is
+=NULL= and =fgets= will attempt to dereference an invalid pointer
+causing the segmentation fault.  We can try to fix the problem by
+allocating the buffer we use to read the line, so we apply the
+following patch to the code:
+
+#+begin_src c
+  char *get_user_input(void)
+  {
+      char *buffer = malloc(MAX_INPUT);
+      if (buffer == NULL) return NULL;
+      printf("Enter a sentence: ");
+      if (fgets(buffer, MAX_INPUT, stdin) == NULL) {
+	  free(buffer);
+	  return NULL;
+      }
+      return buffer;
+  }
+
+  int main(void)
+  {
+      char *input = get_user_input();
+      if (input == NULL) return EXIT_SUCCESS;
+      int words = count_words(input);
+      int letters = total_letters(input);
+
+      printf("Words: %d\n", words);
+      printf("Letters: %d\n", letters);
+
+      if (words > 0)
+	  printf("Average word length: %.2f\n", (double)letters / words);
+
+      free(input);
+      return EXIT_SUCCESS;
+  }
+#+end_src
+
+After patching our code, we can simply recompile the program and try
+running it again (in essence we do not need to restart GDB if we
+recompile the program). Therefore, all we have to do after patching
+the program is recompiling it again and issue the =run= command in the
+GDB interface.
+
+* Stepping Through Code
+After the patch, the code seems to work correctly. However, let's now
+try to enter a sentence whose length is exactly 32 characters (the
+maximum length for a line). Running this new test in GDB yields the
+following output:
+
+#+begin_example
+  (gdb) run 
+  Starting program: /tmp/prog 
+  [Thread debugging using libthread_db enabled]
+  Using host libthread_db library "/lib64/libthread_db.so.1".
+  Enter a sentence: Some sentences might still fail
+  Words: 4
+  Letters: 27
+  Average word length: 6.75
+#+end_example
+
+The output shows 4 words, but the line contains 5 words so there is
+something wrong with our implementation. We can try debugging this
+execution by using a /breakpoint./ A breakpoint allows to pause the
+execution of a program at a specific point. It essentially allows to
+examine what is going on at that point of the execution. GDB allows to
+set breakpoints via the =break= command. In general, you can set a
+breakpoint at the beginning of a function or at a specific line of a
+file. The function responsible for counting the number of words is the
+=count_words= function, so we can set a breakpoint at the beginning of
+that function and run the program as follows:
+
+#+begin_example
+  (gdb) break count_words 
+  Breakpoint 1 at 0x401172: file prog.c, line 10.
+  (gdb) run 
+  Starting program: /tmp/prog 
+  [Thread debugging using libthread_db enabled]
+  Using host libthread_db library "/lib64/libthread_db.so.1".
+  Enter a sentence: Some sentences might still fail
+
+  Breakpoint 1, count_words (text=0x4052a0 "Some sentences might still fail") at prog.c:10
+  10            int count = 0;
+ (gdb) 
+#+end_example
+
+When we are at a breakpoint, we can move to the next instruction with
+the =next= or the =step= commands. The look similar, but there is a
+subtle difference between them upon reaching a function
+invocation. The =step= command will follow its execution inside the
+code of the function call, while the =next= command will not.  In our
+case, stepping with =next= should suffice, so let's step through the
+execution until we reach the loop execution:
+
+#+begin_example
+  (gdb) next
+  11            int in_word = 0;
+  (gdb) next
+  13            for (const char *p = text; *p; p++) {
+  (gdb) next
+  14                if (isspace(*p)) {
+#+end_example
+
+Now, we can inspect the content of the local variables via the =info
+locals= command to find out if the loop initialization holds:
+
+#+begin_example
+  (gdb) info locals 
+  p = 0x4052a0 "Some sentences might still fail"
+  count = 0
+  in_word = 0
+#+end_example
+
+The loop initialization looks correct, so the problem might be inside
+the loop iterations. At each loop iteration we would like to look at
+the character we are examining and the values of the two counters. GDB
+allows to set a break point and attach a script to it once we hit that
+breakpoint via the =commands= command. Therefore, let's set a new
+breakpoint with a script attached to it at the beginning of each loop
+iteration, and let's restart the program's execution:
+
+#+begin_example
+  (gdb) break prog.c:14
+  Breakpoint 2 at 0x40118a: file prog.c, line 14.
+  (gdb) info breakpoints 
+  Num     Type           Disp Enb Address            What
+  1       breakpoint     keep y   0x0000000000401172 in count_words at prog.c:10
+          breakpoint already hit 1 time
+  2       breakpoint     keep y   0x000000000040118a in count_words at prog.c:14
+  (gdb) commands 2 
+  Type commands for breakpoint(s) 2, one per line.
+  End with a line saying just "end".
+  >silent
+  >printf "at char: '%c', count: %d, in_word: %d\n", *p, count, in_word
+  >continue 
+  >end
+  (gdb) delete 1
+  (gdb) run 
+  The program being debugged has been started already.
+  Start it from the beginning? (y or n) y
+  Starting program: /tmp/prog 
+  [Thread debugging using libthread_db enabled]
+  Using host libthread_db library "/lib64/libthread_db.so.1".
+  Enter a sentence: Some sentences might still fail
+  at char: 'S', count: 0, in_word: 0
+  at char: 'o', count: 0, in_word: 1
+  at char: 'm', count: 0, in_word: 1
+  at char: 'e', count: 0, in_word: 1
+  at char: ' ', count: 0, in_word: 1
+  at char: 's', count: 1, in_word: 0
+  at char: 'e', count: 1, in_word: 1
+  at char: 'n', count: 1, in_word: 1
+  at char: 't', count: 1, in_word: 1
+  at char: 'e', count: 1, in_word: 1
+  at char: 'n', count: 1, in_word: 1
+  at char: 'c', count: 1, in_word: 1
+  at char: 'e', count: 1, in_word: 1
+  at char: 's', count: 1, in_word: 1
+  at char: ' ', count: 1, in_word: 1
+  at char: 'm', count: 2, in_word: 0
+  at char: 'i', count: 2, in_word: 1
+  at char: 'g', count: 2, in_word: 1
+  at char: 'h', count: 2, in_word: 1
+  at char: 't', count: 2, in_word: 1
+  at char: ' ', count: 2, in_word: 1
+  at char: 's', count: 3, in_word: 0
+  at char: 't', count: 3, in_word: 1
+  at char: 'i', count: 3, in_word: 1
+  at char: 'l', count: 3, in_word: 1
+  at char: 'l', count: 3, in_word: 1
+  at char: ' ', count: 3, in_word: 1
+  at char: 'f', count: 4, in_word: 0
+  at char: 'a', count: 4, in_word: 1
+  at char: 'i', count: 4, in_word: 1
+  at char: 'l', count: 4, in_word: 1
+  Words: 4
+  Letters: 27
+  Average word length: 6.75
+  [Inferior 1 (process 13165) exited normally]
+#+end_example
+
+Now, let's examine a bit the commands we have issued in GDB.  We first
+set a breakpoint at a specific line of the program via the =break=
+command.  Then, we determine the status and the identifiers of the
+existing breakpoints via the =info break= command. The =info= allows
+to show information about the program being debugged.  In this case,
+we pass the =break= argument to show information about existing
+breakpoints. In particular, we want the identifier of the breakpoint
+to which we want to attach our script (it has identifier 2). Then, we
+use the =commands= command with the identifier of the breakpoint to
+add the script. Each instruction of the script is entered line by
+line. The first instruction is =silent= which all it does is keeping
+the output clean. Then, we enter the =printf= command which is similar
+to what a =printf= statement would look like in C. In this case, we
+are printing the contents of the variables we are interested in. We
+enter the =continue= command.  When we hit a breakpoint, the
+=continue= command allows to continue the execution until we hit some
+other breakpoint or the program terminates. Finally, we tell GDB that
+we have finished entering our script via the =end= delimiter.  Look
+that what we have just done is very similar to a =printf= statement
+inside the code, but with the difference that we do not have to go and
+find remove it once we have finished our debugging session and we do
+not have to recompile the program.  Then, we use the =delete= command
+to delete the breakpoint we placed at the beginning of the
+=count_word= function (we do not really need it anymore). Finally, we
+run the executable. During the executable run, we see that the program
+is logging the information we are interested about.  The loop looks
+like is behaving correctly, but in the last iteration there no space
+character that will delimit the end of a word, so we will have one
+less word. With that in mind, let's now patch the program to overcome
+this problem:
+
+#+begin_src c
+  int count_words(const char *text)
+  {
+      int count = 0;
+      int in_word = 0;
+
+      for (const char *p = text; *p; p++) {
+	  if (isspace(*p)) {
+	      if (in_word) {
+		  count++;
+		  in_word = 0;
+	      }
+	  } else {
+	      in_word = 1;
+	  }
+      }
+
+      if (in_word) ++count;
+
+      return count;
+  }
+#+end_src
+
+Basically, we increment the counter that keeps track of the number of
+words identified if we are still within a word and the iteration
+finishes. The program should behave correctly after our patches, and
+we managed to fix most of the issues thanks to to the help of GDB.
