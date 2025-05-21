@@ -5,14 +5,14 @@ writing our first program in C. For all languages you will be
 learning, there is this tradition of writing this program that simply
 prints /Hello world!/.  In C, this program looks as follows:
 
-#+BEGIN_SRC c
+#+begin_src c
   #include <stdio.h>
 
   int main(void)
   {
       printf("Hello world!\n");
   }
-#+END_SRC
+#+end_src
 
 You can write this program by creating a text file (usually its name
 is terminated by the ~.c~ extension), and adding the following code in
@@ -39,9 +39,9 @@ compiler for C). Now, let's try to compile our first program.
 Assuming that you saved the program in a file named ~hello.c~,
 you can compile it as follows:
 
-#+BEGIN_SRC shell
+#+begin_src shell
   gcc hello.c -o hello
-#+END_SRC
+#+end_src
 
 The ~-o~ parameter simply states what should be the name of the output
 binary.  In fact, if you look into the directory you should be able to
@@ -50,15 +50,15 @@ machine understand.
 
 Finally, you can run the program on Linux and MacOS as follows:
 
-#+BEGIN_SRC shell
+#+begin_src shell
   ./hello
-#+END_SRC
+#+end_src
 
 And, on Windows as follows:
 
-#+BEGIN_SRC powershell
+#+begin_src powershell
   .\hello
-#+END_SRC
+#+end_src
 
 The ~printf~ function (do not worry we will describe what a function
 is in future notes), included by the ~#include <stdio.h>~ statement,
@@ -68,7 +68,7 @@ message (try removing it, what happens?).  It is a really special
 function because it also allows to print some formatted output.  For
 example, let's try to print some formatted output:
 
-#+BEGIN_SRC c
+#+begin_src c
   #include <stdio.h>
 
   int main(void)
@@ -85,7 +85,7 @@ example, let's try to print some formatted output:
 
       printf("Hello, I am %s and I am %f meters.\n", name, height);
   }
-#+END_SRC
+#+end_src
 
 ~%s~ and ~%f~ are the ones responsible for the formatting. In fact,
 after providing the formatting you can specify one parameter for each

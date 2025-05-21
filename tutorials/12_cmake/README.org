@@ -1,0 +1,176 @@
+#+TITLE: An Introduction to CMake
+
+So far we have been building our programs by invoking the C compiler
+directly. However, as a project becomes more and more complex, running
+the C compiler on each source file until we build the final artifacts
+becomes tedious and difficult to maintain. Not only that, imagine
+multiple people collaborating on a large project, how can they all
+build it? A possible solution consists of using some scripts. However,
+maintaining these scripts for every platform was tedious and
+error-prone. Imagine writing three different scripts to build the same
+program on different platforms.  For these reasons, /build systems/
+have emerged. A build system is a program that automates the process
+of transforming source code into an executable, library, or
+package. CMake is a build system mainly used to build C/C++
+projects. CMake tries to abstract the build process. In CMake, the
+developer describes the project's structure and dependencies in a
+single, unified language contained in files name
+=CMakeLists.txt=. CMake uses these files to generate the appropriate
+build files for the specific target platform. Notice that by itself
+CMake does not directly build the project artifacts, but it allows to
+define some rules that will then be used to generate some build
+files. You can think of these build files as some scripts that will
+then be used to build the entire project.  In these notes, we will
+cover some of the basic aspects of CMake.
+
+* Building with CMake
+Consider you have a project that uses CMake, how do you build its
+artifacts?  The first usual step would be to create a directory in
+which we will build the artifacts.  Building in a different directory
+is more convenient since we will not end up mixing the build artifacts
+with the source code.  Therefore, it becomes also convenient removing
+them -- it is all a matter of removing the build directory. Assuming
+that you are in the top source directory, let's create a build
+directory and move into it:
+
+#+begin_src sh
+  mkdir build
+  cd build
+#+end_src
+
+Now, it is time to generate the build files:
+
+#+begin_src sh
+  cmake ..
+#+end_src
+
+We are invoking the =cmake= command with the path to the project. In
+this step, CMake will also perform many checks to detect that the
+build host meets all the requirements for the build. For example, it
+ensures that all programs or libraries required by the build are
+installed. Additionally, this step is configurable via variables that
+can be define defined in CMake files via the =-D= option. For example,
+assuming that the project allows variable =ENABLE_TESTS= to enable the
+build of test programs, we can enable them as follows:
+
+#+begin_src sh
+  cmake -DENABLE_TESTS=ON ..
+#+end_src
+
+Finally, we can build the project. The easiest way to run the build is
+via the following command:
+
+#+begin_src sh
+  cmake --build .
+#+end_src
+
+Usually, project include tests to validate that the program works
+correctly.  If the project comes with some tests and you enabled the
+build of tests when generating the build files, you can run those with
+the following command:
+
+#+begin_src sh
+  ctest
+#+end_src
+
+* Writing CMake Files
+To give an introduction to building with CMake, consider building our
+first program.  The program was contained in a file named =hello.c=.
+CMake uses the content of files name =CMakeLists.txt= to generate the
+build files, so let's create a =CMakeLists.txt= file with the
+following content:
+
+#+begin_src cmake
+  # This is a comment in CMake
+
+  # Here we define the minimum version of CMake we are using. If we
+  # try building on a machine with a older version than 3.27, the
+  # generation of build files will fail
+  cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
+
+  # We set the name of the project which will be stored in a
+  # variable named PROJECT_NAME
+  project(hello     # This will be the content of PROJECT_NAME
+    VERSION 0.0.1   # Setting the PROJECT_VERSION,
+		    # PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
+		    # PROJECT_VERSION_PATCH, and
+		    # PROJECT_VERSION_TWEAK variable.
+    LANGUAGES C     # Select which programming languages are needed
+		    # to build the project
+    # Setting the PROJECT_DESCRIPTION variable
+    DESCRIPTION "A very first program to print hello world")
+
+  # Finally, we start defining the artifacts we want to build
+
+  # We define a single executable file which will be compiled from
+  # the hello.c source file. If the executable needs more binaries
+  # to build, we can simply list them one after the other (ie add
+  # them after hello.c). hello will be the name of the produced
+  # binary
+  add_executable(hello hello.c)
+  # Add some command line options when compiling the program
+  target_compile_options(hello -g3)
+#+end_src
+
+* More Advanced CMake Features
+In CMake, a project can be made of multiple directories. A
+subdirectory only needs to contain its own =CMakeLists.txt=
+file. Then, the parent directory can add it to the build using the
+=add_subdirectory= directive. For example, consider a project with a
+=src= subdirectory, the parent directory can include and build all the
+artifacts produced by =src= as follows:
+
+#+begin_src cmake
+  add_subdirectory(src)
+#+end_src
+
+CMake does not only allow to build executable, but it also allows to
+build libraries.  The idea of a library is that you have some common
+code shared by multiple applications, and you can group it inside a
+library such that it can be reused. When an executable depends on a
+library, the linker is the tool responsible for linking the library
+with the executable.  In C, there are two main types of libraries:
+static libraries and dynamic libraries.  When you compile a program
+and link it with a static library, the library is copied into you
+binary. This makes the final executable self-contained, but
+potentially larger.  When you compile a program and link it against a
+dynamic library, the library is loaded at runtime, so it can be shared
+by multiple programs and it will not be included into the resulting
+binary. This makes keeps the final binary smaller and allows multiple
+programs to share the same library in memory.
+In CMake, you can create and link a static library as follows:
+
+#+begin_src cmake
+  # We declare a library as static and we list the files which are
+  # part of the library.
+  add_library(mylibrary STATIC library_code1.c library_code2.c)
+
+  # We declare our executable.
+  add_executable(program main.c helper.c)
+
+  # Here we link the library with the executable
+  target_link_libraries(program mylibrary)
+#+end_src
+
+Similarly, we can declare and link a dynamic library as follows:
+
+#+begin_src cmake
+  # We declare a library as dynamic and we list the files which are
+  # part of the library.
+  add_library(mylibrary SHARED library_code1.c library_code2.c)
+
+  # We declare our executable.
+  add_executable(program main.c helper.c)
+
+  # Here we link the library with the executable
+  target_link_libraries(program mylibrary)
+#+end_src
+
+These are only some of the most useful features CMake offers. However,
+notice that this list is not by any means complete, but it is intended
+to provide a brief overview of some commonly used constructs.
+
+* Exercises
+** Exercise 1 (Optional)
+To have get more confidence with writing =CMakeLists.txt= files, try
+completing the [[https://cmake.org/cmake/help/latest/guide/tutorial/index.html][CMake tutorial]].
