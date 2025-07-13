@@ -7,9 +7,9 @@
 struct img_struct;
 
 struct img_struct_ops {
-    int (*init)(struct img_struct *, FILE * fp);
+    int (*init)(struct img_struct *, FILE *);
     void (*destroy)(struct img_struct *);
-    int (*save)(struct img_struct *, FILE * fp);
+    int (*save)(struct img_struct *, FILE *);
 };
 
 struct img_struct {

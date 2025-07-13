@@ -1,6 +1,6 @@
 extern "C" {
 #include <img/img.h>
-#include <img/png.h>
+#include <img/jpeg.h>
 }
 #include <fstream>
 #include <gmock/gmock.h>
@@ -8,58 +8,58 @@ extern "C" {
 
 using namespace testing;
 
-TEST(PNGTest, ImgFromFile) {
-  struct img_struct *img = img_from_file("cat.png");
+TEST(JPEGTest, ImgFromFile) {
+  struct img_struct *img = img_from_file("cat.jpg");
 
   EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_width(img), Eq(320));
-  EXPECT_THAT(img_height(img), Eq(395));
+  EXPECT_THAT(img_width(img), Eq(539));
+  EXPECT_THAT(img_height(img), Eq(360));
 
   img_destroy(img);
 }
 
-TEST(PNGTest, ImgFromFileIvalidMagic) {
-  struct img_struct *img = img_from_file("invalid-magic.png");
+TEST(JPEGTest, ImgFromFileIvalidMagic) {
+  struct img_struct *img = img_from_file("invalid-magic.jpg");
 
   EXPECT_THAT(img, IsNull());
 }
 
-TEST(PNGTest, NewPNGImg) {
+TEST(JPEGTest, NewJPEGImg) {
   FILE *fp;
   struct img_struct *img;
 
-  fp = fopen("cat.png", "r");
+  fp = fopen("cat.jpg", "r");
   EXPECT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_struct *)png_img_new(fp);
+  img = (struct img_struct *)jpeg_img_new(fp);
   EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_width(img), Eq(320));
-  EXPECT_THAT(img_height(img), Eq(395));
+  EXPECT_THAT(img_width(img), Eq(539));
+  EXPECT_THAT(img_height(img), Eq(360));
 
   img_destroy(img);
 }
 
-TEST(PNGTest, NewPNGImgInvalidMagic) {
+TEST(JPEGTest, NewJPEGImgInvalidMagic) {
   FILE *fp;
   struct img_struct *img;
 
-  fp = fopen("invalid-magic.png", "r");
+  fp = fopen("invalid-magic.jpg", "r");
   EXPECT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_struct *)png_img_new(fp);
+  img = (struct img_struct *)jpeg_img_new(fp);
   EXPECT_THAT(img, IsNull());
   fclose(fp);
 }
 
-TEST(PNGTest, Save) {
-  struct img_struct *img = img_from_file("cat.png");
+TEST(JPEGTest, Save) {
+  struct img_struct *img = img_from_file("cat.jpg");
 
   EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_save(img, "cat-copy.png"), Not(Eq(0)));
+  EXPECT_THAT(img_save(img, "cat-copy.jpg"), Not(Eq(0)));
   img_destroy(img);
 
-  std::ifstream src("cat.png", std::ios::binary | std::ios::ate);
-  std::ifstream dst("cat-copy.png", std::ios::binary | std::ios::ate);
+  std::ifstream src("cat.jpg", std::ios::binary | std::ios::ate);
+  std::ifstream dst("cat-copy.jpg", std::ios::binary | std::ios::ate);
 
   EXPECT_TRUE(src.is_open() && dst.is_open());
 

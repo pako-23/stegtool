@@ -5,6 +5,6 @@
 
 struct png_img;
 
-struct png_img *png_img_new(FILE * fp);
+struct png_img *png_img_new(FILE *fp);
 
 #endif

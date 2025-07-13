@@ -1,4 +1,4 @@
-add_library(img_obj OBJECT img.c)
+add_library(img_obj OBJECT img.c jpeg.c png.c)
 target_include_directories(img_obj PUBLIC include)
 set_target_properties(img_obj PROPERTIES
   POSITION_INDEPENDENT_CODE ON)

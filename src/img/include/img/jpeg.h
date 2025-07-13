@@ -5,6 +5,6 @@
 
 struct jpeg_img;
 
-struct jpeg_img *jpeg_img_new(FILE * fp);
+struct jpeg_img *jpeg_img_new(FILE *fp);
 
 #endif
