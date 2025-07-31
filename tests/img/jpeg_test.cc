@@ -2,14 +2,15 @@ extern "C" {
 #include <img/img.h>
 #include <img/jpeg.h>
 }
-#include <fstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <fstream>
 
 using namespace testing;
 
 TEST(JPEGTest, ImgFromFile) {
-  struct img_struct *img = img_from_file("cat.jpg");
+  struct img_s *img = img_from_file("cat.jpg");
 
   EXPECT_THAT(img, Not(IsNull()));
   EXPECT_THAT(img_width(img), Eq(539));
@@ -19,19 +20,19 @@ TEST(JPEGTest, ImgFromFile) {
 }
 
 TEST(JPEGTest, ImgFromFileIvalidMagic) {
-  struct img_struct *img = img_from_file("invalid-magic.jpg");
+  struct img_s *img = img_from_file("invalid-magic.jpg");
 
   EXPECT_THAT(img, IsNull());
 }
 
 TEST(JPEGTest, NewJPEGImg) {
   FILE *fp;
-  struct img_struct *img;
+  struct img_s *img;
 
   fp = fopen("cat.jpg", "r");
   EXPECT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_struct *)jpeg_img_new(fp);
+  img = (struct img_s *)jpeg_img_new(fp);
   EXPECT_THAT(img, Not(IsNull()));
   EXPECT_THAT(img_width(img), Eq(539));
   EXPECT_THAT(img_height(img), Eq(360));
@@ -41,18 +42,18 @@ TEST(JPEGTest, NewJPEGImg) {
 
 TEST(JPEGTest, NewJPEGImgInvalidMagic) {
   FILE *fp;
-  struct img_struct *img;
+  struct img_s *img;
 
   fp = fopen("invalid-magic.jpg", "r");
   EXPECT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_struct *)jpeg_img_new(fp);
+  img = (struct img_s *)jpeg_img_new(fp);
   EXPECT_THAT(img, IsNull());
   fclose(fp);
 }
 
 TEST(JPEGTest, Save) {
-  struct img_struct *img = img_from_file("cat.jpg");
+  struct img_s *img = img_from_file("cat.jpg");
 
   EXPECT_THAT(img, Not(IsNull()));
   EXPECT_THAT(img_save(img, "cat-copy.jpg"), Not(Eq(0)));

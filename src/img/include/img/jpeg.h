@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 
-struct jpeg_img;
+struct jpeg_img_s;
 
-struct jpeg_img *jpeg_img_new(FILE *fp);
+extern const unsigned char jpeg_magic[4];
+
+struct jpeg_img_s *jpeg_img_new(FILE * fp);
 
 #endif

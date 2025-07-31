@@ -2,32 +2,36 @@
 #include <img/png.h>
 
 struct png_img {
-    struct img_struct super;
+	struct img_s super;
 };
 
-static int init(struct img_struct *img, FILE *fp);
-static void destroy(struct img_struct *img);
-static int save(struct img_struct *img, FILE *fp);
+static int init(struct img_s *img, FILE * fp);
+static void destroy(struct img_s *img);
+static int save(const struct img_s *img, FILE * fp);
 
-static const struct img_struct_ops ops = {
-    .init = init,
-    .destroy = destroy,
-    .save = save,
+const unsigned char png_magic[4] = { 0x89, 0x50, 0x4e, 0x47 };
+
+static const struct img_ops_s ops = {
+	.init = init,
+	.destroy = destroy,
+	.save = save,
 };
 
-struct png_img *png_img_new(FILE *fp)
+struct png_img_s *png_img_new(FILE *fp)
 {
-    return NULL;
+	return NULL;
 }
 
-static int init(struct img_struct *img, FILE *fp)
+static int init(struct img_s *img, FILE *fp)
 {
-    return 0;
+	return -1;
 }
 
-static void destroy(struct img_struct *img) {}
-
-static int save(struct img_struct *img, FILE *fp)
+static void destroy(struct img_s *img)
 {
-    return 0;
+}
+
+static int save(const struct img_s *img, FILE *fp)
+{
+	return -1;
 }

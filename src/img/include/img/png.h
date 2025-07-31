@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 
-struct png_img;
+struct png_img_s;
 
-struct png_img *png_img_new(FILE *fp);
+extern const unsigned char png_magic[4];
+
+struct png_img_s *png_img_new(FILE * fp);
 
 #endif

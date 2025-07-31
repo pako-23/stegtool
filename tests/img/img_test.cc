@@ -7,36 +7,36 @@ extern "C" {
 using namespace testing;
 
 struct img_mock {
-  struct img_struct super;
+  struct img_s super;
   bool destroy_called;
   bool save_called;
 };
 
-static void img_mock_destroy(struct img_struct *img) {
+static void img_mock_destroy(struct img_s *img) {
   ((struct img_mock *)img)->destroy_called = true;
 }
 
-static int img_mock_save(struct img_struct *img, FILE *fp) {
-  ((struct img_mock *)img)->save_called = true;
-  return 1;
-}
-
-static int img_mock_fail_save(struct img_struct *img, FILE *fp) {
+static int img_mock_save(const struct img_s *img, FILE *fp) {
   ((struct img_mock *)img)->save_called = true;
   return 0;
 }
 
-static const struct img_struct_ops success_ops = {
+static int img_mock_fail_save(const struct img_s *img, FILE *fp) {
+  ((struct img_mock *)img)->save_called = true;
+  return -1;
+}
+
+static const struct img_ops_s success_ops = {
     .destroy = img_mock_destroy,
     .save = img_mock_save,
 };
-static const struct img_struct_ops save_fail_ops = {
+static const struct img_ops_s save_fail_ops = {
     .destroy = img_mock_destroy,
     .save = img_mock_fail_save,
 };
 
 TEST(ImgTest, Width) {
-  struct img_struct img;
+  struct img_s img;
 
   img.width = 400;
   EXPECT_THAT(img_width(&img), Eq(400))
@@ -44,7 +44,7 @@ TEST(ImgTest, Width) {
 }
 
 TEST(ImgTest, Height) {
-  struct img_struct img;
+  struct img_s img;
 
   img.height = 600;
 
@@ -59,7 +59,7 @@ TEST(ImgTest, Destroy) {
       .save_called = false,
   };
 
-  img_destroy((struct img_struct *)&img);
+  img_destroy((struct img_s *)&img);
   EXPECT_FALSE(img.save_called);
   EXPECT_TRUE(img.destroy_called);
 }
@@ -71,8 +71,8 @@ TEST(ImgTest, Save) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((struct img_struct *)&img, NULL), Eq(1))
-      << "img_save should return 1 on success";
+  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-test"), Eq(0))
+      << "img_save should return 0 on success";
   EXPECT_TRUE(img.save_called);
   EXPECT_FALSE(img.destroy_called);
 }
@@ -84,8 +84,8 @@ TEST(ImgTest, SaveFailure) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((struct img_struct *)&img, NULL), Eq(0))
-      << "img_save should return 0 on failure";
+  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-fail-test"), Lt(0))
+      << "img_save should return a negative number on failure";
   EXPECT_TRUE(img.save_called);
   EXPECT_FALSE(img.destroy_called);
 }
