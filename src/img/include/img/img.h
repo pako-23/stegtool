@@ -4,25 +4,25 @@
 #include <stddef.h>
 #include <stdio.h>
 
-struct img_struct;
+struct img_s;
 
-struct img_struct_ops {
-    int (*init)(struct img_struct *, FILE *);
-    void (*destroy)(struct img_struct *);
-    int (*save)(struct img_struct *, FILE *);
+struct img_ops_s {
+    int (*init)(struct img_s *, FILE *);
+    void (*destroy)(struct img_s *);
+    int (*save)(const struct img_s *, FILE *);
 };
 
-struct img_struct {
-    const struct img_struct_ops *ops;
+struct img_s {
+    const struct img_ops_s *ops;
     size_t width;
     size_t height;
 };
 
-struct img_struct *img_from_file(const char *fname);
-void img_destroy(struct img_struct *img);
+struct img_s *img_from_file(const char *fname);
+void img_destroy(struct img_s *img);
 
-size_t img_width(const struct img_struct *img);
-size_t img_height(const struct img_struct *img);
-int img_save(struct img_struct *img, const char *fname);
+size_t img_width(const struct img_s *img);
+size_t img_height(const struct img_s *img);
+int img_save(const struct img_s *img, const char *fname);
 
 #endif

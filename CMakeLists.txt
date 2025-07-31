@@ -18,5 +18,5 @@ add_subdirectory(src)
 
 if(stegtool_BUILD_TESTS)
   include(testing)
-  add_subdirectory(test)
+  add_subdirectory(tests)
 endif()
