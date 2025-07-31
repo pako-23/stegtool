@@ -50,7 +50,17 @@ size_t img_height(const struct img_s *img)
     return img->height;
 }
 
-int img_save(const struct img_s *img, const char *fname)
-{
-    return 0;
+int img_save(const struct img_s *img, const char *fname) {
+
+  FILE *fp;
+  int ret;
+
+    fp = fopen(fname, "wb");
+    if (fp == NULL)
+        return -1;
+
+    ret = img->ops->save(img, fp);
+
+    fclose(fp);
+    return ret;
 }

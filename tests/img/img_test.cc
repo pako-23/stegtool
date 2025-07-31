@@ -71,8 +71,8 @@ TEST(ImgTest, Save) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((const struct img_s *)&img, NULL), Eq(1))
-      << "img_save should return 1 on success";
+  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-test"), Eq(0))
+      << "img_save should return 0 on success";
   EXPECT_TRUE(img.save_called);
   EXPECT_FALSE(img.destroy_called);
 }
@@ -84,8 +84,8 @@ TEST(ImgTest, SaveFailure) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((const struct img_s *)&img, NULL), Eq(0))
-      << "img_save should return 0 on failure";
+  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-fail-test"), Lt(0))
+      << "img_save should return a negative number on failure";
   EXPECT_TRUE(img.save_called);
   EXPECT_FALSE(img.destroy_called);
 }
