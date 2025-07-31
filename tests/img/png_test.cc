@@ -2,9 +2,10 @@ extern "C" {
 #include <img/img.h>
 #include <img/png.h>
 }
-#include <fstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <fstream>
 
 using namespace testing;
 

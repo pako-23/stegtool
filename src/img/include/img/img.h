@@ -7,15 +7,15 @@
 struct img_s;
 
 struct img_ops_s {
-    int (*init)(struct img_s *, FILE *);
-    void (*destroy)(struct img_s *);
-    int (*save)(const struct img_s *, FILE *);
+	int (*init)(struct img_s *, FILE *);
+	void (*destroy)(struct img_s *);
+	int (*save)(const struct img_s *, FILE *);
 };
 
 struct img_s {
-    const struct img_ops_s *ops;
-    size_t width;
-    size_t height;
+	const struct img_ops_s *ops;
+	size_t width;
+	size_t height;
 };
 
 struct img_s *img_from_file(const char *fname);
