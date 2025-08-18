@@ -14,6 +14,8 @@ option(stegtool_BUILD_TESTS "Build test programs" ON)
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
+add_compile_options("$<$<CONFIG:Debug>:-g3>")
+
 add_subdirectory(src)
 
 if(stegtool_BUILD_TESTS)

@@ -1,6 +1,7 @@
 #include <img/img.h>
 #include <img/png.h>
 #include <img/jpeg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,28 +9,38 @@
 struct img_s *img_from_file(const char *fname)
 {
 	FILE *fp;
-	unsigned char magic[4];
-	size_t nread;
+    unsigned char magic[8];
+    struct img_s *img = NULL;
+    size_t nread;
+    size_t n;
 
 	fp = fopen(fname, "rb");
 	if (fp == NULL)
 		return NULL;
 
-	nread = fread(magic, 1, 4, fp);
-	if (nread < 4) {
-		fclose(fp);
-		return NULL;
-	}
+    n = sizeof(jpeg_magic);
+	nread = fread(magic, 1, n, fp);
+	if (nread != n)
+        goto end;
 
-	rewind(fp);
+    if (memcmp(magic, jpeg_magic, n) == 0) {
+        rewind(fp);
+        img = (struct img_s *)jpeg_img_new(fp);
+        goto end;
+    }
 
-	if (memcmp(magic, png_magic, 4) == 0)
-		return (struct img_s *)png_img_new(fp);
-	else if (memcmp(magic, jpeg_magic, 3) == 0)
-		return (struct img_s *)jpeg_img_new(fp);
+    nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
+    if (nread != sizeof(png_magic) - n)
+        goto end;
 
+    if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
+        rewind(fp);
+        img = (struct img_s *)png_img_new(fp);
+    }
+
+ end:
 	fclose(fp);
-	return NULL;
+	return img;
 }
 
 void img_destroy(struct img_s *img)

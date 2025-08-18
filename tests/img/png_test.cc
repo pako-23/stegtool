@@ -56,11 +56,11 @@ TEST(PNGTest, Save) {
   struct img_s *img = img_from_file("cat.png");
 
   EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_save(img, "cat-copy.png"), Not(Eq(0)));
+  EXPECT_THAT(img_save(img, "cat-copy.png"), Eq(0));
   img_destroy(img);
 
-  std::ifstream src("cat.png", std::ios::binary | std::ios::ate);
-  std::ifstream dst("cat-copy.png", std::ios::binary | std::ios::ate);
+  std::ifstream src("cat.png", std::ios::binary | std::ios::in);
+  std::ifstream dst("cat-copy.png", std::ios::binary | std::ios::in);
 
   EXPECT_TRUE(src.is_open() && dst.is_open());
 
@@ -72,5 +72,8 @@ TEST(PNGTest, Save) {
          dst.read(buf_dst.data(), buffer_size))
     EXPECT_THAT(buf_src, Eq(buf_dst));
 
-  EXPECT_TRUE(src.eof() && dst.eof());
+  EXPECT_FALSE(src.read(buf_src.data(), buffer_size));
+  EXPECT_FALSE(dst.read(buf_dst.data(), buffer_size));
+  EXPECT_TRUE(src.eof());
+  EXPECT_TRUE(dst.eof());
 }
