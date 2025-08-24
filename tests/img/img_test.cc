@@ -39,7 +39,7 @@ TEST(ImgTest, Width) {
   struct img_s img;
 
   img.width = 400;
-  EXPECT_THAT(img_width(&img), Eq(400))
+  ASSERT_THAT(img_width(&img), Eq(400))
       << "img_width should return the width of an image";
 }
 
@@ -48,7 +48,7 @@ TEST(ImgTest, Height) {
 
   img.height = 600;
 
-  EXPECT_THAT(img_height(&img), Eq(600))
+  ASSERT_THAT(img_height(&img), Eq(600))
       << "img_height should return the height of an image";
 }
 
@@ -60,8 +60,8 @@ TEST(ImgTest, Destroy) {
   };
 
   img_destroy((struct img_s *)&img);
-  EXPECT_FALSE(img.save_called);
-  EXPECT_TRUE(img.destroy_called);
+  ASSERT_FALSE(img.save_called);
+  ASSERT_TRUE(img.destroy_called);
 }
 
 TEST(ImgTest, Save) {
@@ -71,10 +71,10 @@ TEST(ImgTest, Save) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-test"), Eq(0))
+  ASSERT_THAT(img_save((const struct img_s *)&img, "img-save-test"), Eq(0))
       << "img_save should return 0 on success";
-  EXPECT_TRUE(img.save_called);
-  EXPECT_FALSE(img.destroy_called);
+  ASSERT_TRUE(img.save_called);
+  ASSERT_FALSE(img.destroy_called);
 }
 
 TEST(ImgTest, SaveFailure) {
@@ -84,24 +84,24 @@ TEST(ImgTest, SaveFailure) {
       .save_called = false,
   };
 
-  EXPECT_THAT(img_save((const struct img_s *)&img, "img-save-fail-test"), Lt(0))
+  ASSERT_THAT(img_save((const struct img_s *)&img, "img-save-fail-test"), Lt(0))
       << "img_save should return a negative number on failure";
-  EXPECT_TRUE(img.save_called);
-  EXPECT_FALSE(img.destroy_called);
+  ASSERT_TRUE(img.save_called);
+  ASSERT_FALSE(img.destroy_called);
 }
 
 TEST(ImgTest, NotExistingFile) {
-  EXPECT_THAT(img_from_file("not-existing"), IsNull())
+  ASSERT_THAT(img_from_file("not-existing"), IsNull())
       << "img_from_file should return NULL if the filename does not exist";
 }
 
 TEST(ImgTest, EmptyFile) {
-  EXPECT_THAT(img_from_file("empty"), IsNull())
+  ASSERT_THAT(img_from_file("empty"), IsNull())
       << "img_from_file should return NULL if the filename does not contain "
          "the magic number";
 }
 
 TEST(ImgTest, UnsupportedFileFormat) {
-  EXPECT_THAT(img_from_file("unsupported-format"), IsNull())
+  ASSERT_THAT(img_from_file("unsupported-format"), IsNull())
       << "img_from_file should return NULL if the magic number is not valid";
 }

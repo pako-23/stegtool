@@ -9,34 +9,34 @@
 struct img_s *img_from_file(const char *fname)
 {
 	FILE *fp;
-    unsigned char magic[8];
-    struct img_s *img = NULL;
-    size_t nread;
-    size_t n;
+	unsigned char magic[8];
+	struct img_s *img = NULL;
+	size_t nread;
+	size_t n;
 
 	fp = fopen(fname, "rb");
 	if (fp == NULL)
 		return NULL;
 
-    n = sizeof(jpeg_magic);
+	n = sizeof(jpeg_magic);
 	nread = fread(magic, 1, n, fp);
 	if (nread != n)
-        goto end;
+		goto end;
 
-    if (memcmp(magic, jpeg_magic, n) == 0) {
-        rewind(fp);
-        img = (struct img_s *)jpeg_img_new(fp);
-        goto end;
-    }
+	if (memcmp(magic, jpeg_magic, n) == 0) {
+		rewind(fp);
+		img = (struct img_s *)jpeg_img_new(fp);
+		goto end;
+	}
 
-    nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
-    if (nread != sizeof(png_magic) - n)
-        goto end;
+	nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
+	if (nread != sizeof(png_magic) - n)
+		goto end;
 
-    if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
-        rewind(fp);
-        img = (struct img_s *)png_img_new(fp);
-    }
+	if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
+		rewind(fp);
+		img = (struct img_s *)png_img_new(fp);
+	}
 
  end:
 	fclose(fp);
