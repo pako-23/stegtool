@@ -34,6 +34,7 @@ struct png_img_it {
 
 static int init(struct img_s *img, FILE * fp);
 static void destroy(struct img_s *img);
+
 static int save(const struct img_s *img, FILE *fp);
 static struct img_it *iterator(struct img_s *img);
 

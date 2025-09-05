@@ -15,6 +15,7 @@ struct img_mock_it {
   bool write_called;
 };
 
+
 struct img_mock {
   struct img_s super;
   bool destroy_called;

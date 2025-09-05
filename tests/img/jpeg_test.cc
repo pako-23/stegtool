@@ -47,10 +47,10 @@ TEST(JPEGTest, NewJPEGImgInvalidMagic) {
   struct img_s *img;
 
   fp = fopen("invalid-magic.jpg", "r");
-  ASSERT_THAT(fp, Not(IsNull()));
+  EXPECT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)jpeg_img_new(fp);
-  ASSERT_THAT(img, IsNull());
+  EXPECT_THAT(img, IsNull());
   fclose(fp);
 }
 
