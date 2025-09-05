@@ -1,6 +1,7 @@
 #include <img/img.h>
 #include <img/png.h>
 #include <img/jpeg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,28 +9,38 @@
 struct img_s *img_from_file(const char *fname)
 {
 	FILE *fp;
-	unsigned char magic[4];
+	unsigned char magic[8];
+	struct img_s *img = NULL;
 	size_t nread;
+	size_t n;
 
 	fp = fopen(fname, "rb");
 	if (fp == NULL)
 		return NULL;
 
-	nread = fread(magic, 1, 4, fp);
-	if (nread < 4) {
-		fclose(fp);
-		return NULL;
+	n = sizeof(jpeg_magic);
+	nread = fread(magic, 1, n, fp);
+	if (nread != n)
+		goto end;
+
+	if (memcmp(magic, jpeg_magic, n) == 0) {
+		rewind(fp);
+		img = (struct img_s *)jpeg_img_new(fp);
+		goto end;
 	}
 
-	rewind(fp);
+	nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
+	if (nread != sizeof(png_magic) - n)
+		goto end;
 
-	if (memcmp(magic, png_magic, 4) == 0)
-		return (struct img_s *)png_img_new(fp);
-	else if (memcmp(magic, jpeg_magic, 3) == 0)
-		return (struct img_s *)jpeg_img_new(fp);
+	if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
+		rewind(fp);
+		img = (struct img_s *)png_img_new(fp);
+	}
 
+ end:
 	fclose(fp);
-	return NULL;
+	return img;
 }
 
 void img_destroy(struct img_s *img)
@@ -61,4 +72,34 @@ int img_save(const struct img_s *img, const char *fname)
 
 	fclose(fp);
 	return ret;
+}
+
+struct img_it *img_iterator(struct img_s *img)
+{
+	return img->ops->iterator(img);
+}
+
+void img_it_destroy(struct img_it *it)
+{
+	it->ops->destroy(it);
+}
+
+void img_it_next(struct img_it *it)
+{
+	it->ops->next(it);
+}
+
+int img_it_has_next(const struct img_it *it)
+{
+	return it->ops->has_next(it);
+}
+
+void img_it_read(const struct img_it *it, struct pixel_s *pixel)
+{
+	it->ops->read(it, pixel);
+}
+
+void img_it_write(const struct img_it *it, const struct pixel_s *pixel)
+{
+	it->ops->write(it, pixel);
 }

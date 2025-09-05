@@ -12,9 +12,9 @@ using namespace testing;
 TEST(PNGTest, ImgFromFile) {
   struct img_s *img = img_from_file("cat.png");
 
-  EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_width(img), Eq(320));
-  EXPECT_THAT(img_height(img), Eq(395));
+  ASSERT_THAT(img, Not(IsNull()));
+  ASSERT_THAT(img_width(img), Eq(320));
+  ASSERT_THAT(img_height(img), Eq(395));
 
   img_destroy(img);
 }
@@ -22,7 +22,7 @@ TEST(PNGTest, ImgFromFile) {
 TEST(PNGTest, ImgFromFileIvalidMagic) {
   struct img_s *img = img_from_file("invalid-magic.png");
 
-  EXPECT_THAT(img, IsNull());
+  ASSERT_THAT(img, IsNull());
 }
 
 TEST(PNGTest, NewPNGImg) {
@@ -30,12 +30,14 @@ TEST(PNGTest, NewPNGImg) {
   struct img_s *img;
 
   fp = fopen("cat.png", "r");
-  EXPECT_THAT(fp, Not(IsNull()));
+  ASSERT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)png_img_new(fp);
-  EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_width(img), Eq(320));
-  EXPECT_THAT(img_height(img), Eq(395));
+  fclose(fp);
+
+  ASSERT_THAT(img, Not(IsNull()));
+  ASSERT_THAT(img_width(img), Eq(320));
+  ASSERT_THAT(img_height(img), Eq(395));
 
   img_destroy(img);
 }
@@ -45,24 +47,24 @@ TEST(PNGTest, NewPNGImgInvalidMagic) {
   struct img_s *img;
 
   fp = fopen("invalid-magic.png", "r");
-  EXPECT_THAT(fp, Not(IsNull()));
+  ASSERT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)png_img_new(fp);
-  EXPECT_THAT(img, IsNull());
+  ASSERT_THAT(img, IsNull());
   fclose(fp);
 }
 
 TEST(PNGTest, Save) {
   struct img_s *img = img_from_file("cat.png");
 
-  EXPECT_THAT(img, Not(IsNull()));
-  EXPECT_THAT(img_save(img, "cat-copy.png"), Not(Eq(0)));
+  ASSERT_THAT(img, Not(IsNull()));
+  ASSERT_THAT(img_save(img, "cat-copy.png"), Eq(0));
   img_destroy(img);
 
-  std::ifstream src("cat.png", std::ios::binary | std::ios::ate);
-  std::ifstream dst("cat-copy.png", std::ios::binary | std::ios::ate);
+  std::ifstream src("cat.png", std::ios::binary | std::ios::in);
+  std::ifstream dst("cat-copy.png", std::ios::binary | std::ios::in);
 
-  EXPECT_TRUE(src.is_open() && dst.is_open());
+  ASSERT_TRUE(src.is_open() && dst.is_open());
 
   const size_t buffer_size = 4096;
   std::vector<char> buf_src(buffer_size);
@@ -70,7 +72,29 @@ TEST(PNGTest, Save) {
 
   while (src.read(buf_src.data(), buffer_size) &&
          dst.read(buf_dst.data(), buffer_size))
-    EXPECT_THAT(buf_src, Eq(buf_dst));
+    ASSERT_THAT(buf_src, Eq(buf_dst));
 
-  EXPECT_TRUE(src.eof() && dst.eof());
+  ASSERT_FALSE(src.read(buf_src.data(), buffer_size));
+  ASSERT_FALSE(dst.read(buf_dst.data(), buffer_size));
+  ASSERT_TRUE(src.eof());
+  ASSERT_TRUE(dst.eof());
+}
+
+TEST(PNGTest, PixelIteration) {
+  struct img_s *img = img_from_file("cat.png");
+  ASSERT_THAT(img, Not(IsNull()));
+  size_t expected_pixels = img_width(img) * img_height(img);
+
+  struct img_it *it = img_iterator(img);
+  ASSERT_THAT(it, Not(IsNull()));
+
+  size_t pixels = 0;
+  while (img_it_has_next(it)) {
+    img_it_next(it);
+    ++pixels;
+  }
+
+  ASSERT_THAT(pixels, Eq(expected_pixels));
+
+  img_destroy(img);
 }
