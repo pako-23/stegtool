@@ -37,11 +37,11 @@ static int img_mock_fail_save(const struct img_s *img, FILE *fp) {
 
 static void img_mock_it_destroy(struct img_it *it) { free(it); }
 
-void img_mock_it_next(struct img_it *it) {
+static void img_mock_it_next(struct img_it *it) {
   ((struct img_mock_it *)it)->next_called = true;
 }
 
-int img_mock_it_has_next(const struct img_it *it) {
+static int img_mock_it_has_next(const struct img_it *it) {
   if (((struct img_mock_it *)it)->has_next_called)
     return 0;
 
@@ -49,11 +49,12 @@ int img_mock_it_has_next(const struct img_it *it) {
   return 1;
 }
 
-void img_mock_it_read(const struct img_it *it, struct pixel_s *p) {
+static void img_mock_it_read(const struct img_it *it, struct pixel_s *p) {
   ((struct img_mock_it *)it)->read_called = true;
 }
 
-void img_mock_it_write(const struct img_it *it, const struct pixel_s *p) {
+static void img_mock_it_write(const struct img_it *it,
+                              const struct pixel_s *p) {
   ((struct img_mock_it *)it)->write_called = true;
 }
 

@@ -25,9 +25,24 @@ struct png_img_s {
 	struct chunk *tail;
 };
 
+struct png_img_it {
+    struct img_it super;
+    const struct png_img_s *img;
+    struct chunk *node;
+    unsigned char *pixel;
+};
+
 static int init(struct img_s *img, FILE * fp);
 static void destroy(struct img_s *img);
-static int save(const struct img_s *img, FILE * fp);
+static int save(const struct img_s *img, FILE *fp);
+static struct img_it *iterator(struct img_s *img);
+
+static void it_destroy(struct img_it *it);
+static void next(struct img_it *it);
+static int has_next(const struct img_it *it);
+static void read(const struct img_it *it, struct pixel_s *p);
+static void write(const struct img_it *it, const struct pixel_s *p);
+
 
 const unsigned char png_magic[8] = { 0x89, 0x50, 0x4e, 0x47,
 	0x0d, 0x0a, 0x1a, 0x0a
@@ -35,10 +50,20 @@ const unsigned char png_magic[8] = { 0x89, 0x50, 0x4e, 0x47,
 static const unsigned char iend_chunk[4] = { 'I', 'E', 'N', 'D' };
 
 static const struct img_ops_s ops = {
-	.init = init,
-	.destroy = destroy,
-	.save = save,
+    .init = init,
+    .destroy = destroy,
+    .save = save,
+    .iterator = iterator,
 };
+
+static const struct img_it_ops it_ops = {
+    .destroy = it_destroy,
+    .next = next,
+    .has_next = has_next,
+    .read = read,
+    .write = write,
+};
+
 
 struct png_img_s *png_img_new(FILE *fp)
 {
@@ -187,3 +212,54 @@ static int save(const struct img_s *img, FILE *fp)
 
 	return 0;
 }
+
+static size_t pixel_size(const struct png_img_s *img) {
+    return 4;
+}
+
+static struct chunk *chunk_advance(struct chunk *it) {
+    static unsigned char idat_chunk[4] = {'I', 'D', 'A', 'T' };
+
+    for (; it != NULL && memcmp(it->type, idat_chunk, 4) != 0; it = it->next)
+        ;
+
+    return it;
+}
+
+static struct img_it *iterator(struct img_s *img) {
+    struct png_img_it *it;
+
+    it = malloc(sizeof(struct png_img_it));
+    if (it == NULL)
+        return NULL;
+
+    it->super.ops = &it_ops;
+    it->img = (const struct png_img_s *)img;
+    it->node = chunk_advance(((struct png_img_s *)img)->head);
+    if (it->node != NULL) it->pixel = it->node->data;
+
+    return &it->super;
+}
+
+static void it_destroy(struct img_it *it) {
+    free(it);
+}
+
+static void next(struct img_it *it) {
+    struct png_img_it *pos = (struct png_img_it *)it;
+    
+    pos->pixel += pixel_size(pos->img);
+    if (pos->pixel < pos->node->data + pos->node->len)
+        return;
+
+    pos->node = chunk_advance(pos->node->next);
+    if (pos->node != NULL) pos->pixel = pos->node->data;
+}
+
+static int has_next(const struct img_it *it) {
+    return ((struct png_img_it *)it)->node != NULL;
+}
+
+static void read(const struct img_it *it, struct pixel_s *p) {}
+
+static void write(const struct img_it *it, const struct pixel_s *p) {}
