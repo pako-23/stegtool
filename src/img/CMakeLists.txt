@@ -11,7 +11,7 @@ set_target_properties(img_static PROPERTIES OUTPUT_NAME img)
 
 if(WIN32)
   target_link_libraries(img_obj PRIVATE ws2_32)
-
+else()
   add_library(img_shared SHARED)
   target_link_libraries(img_shared img_obj)
   set_target_properties(img_shared PROPERTIES OUTPUT_NAME img)
