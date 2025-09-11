@@ -29,7 +29,7 @@ TEST(PNGTest, NewPNGImg) {
   FILE *fp;
   struct img_s *img;
 
-  fp = fopen("cat.png", "r");
+  fp = fopen("cat.png", "rb");
   ASSERT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)png_img_new(fp);
@@ -46,7 +46,7 @@ TEST(PNGTest, NewPNGImgInvalidMagic) {
   FILE *fp;
   struct img_s *img;
 
-  fp = fopen("invalid-magic.png", "r");
+  fp = fopen("invalid-magic.png", "rb");
   ASSERT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)png_img_new(fp);

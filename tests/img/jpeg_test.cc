@@ -29,7 +29,7 @@ TEST(JPEGTest, NewJPEGImg) {
   FILE *fp;
   struct img_s *img;
 
-  fp = fopen("cat.jpg", "r");
+  fp = fopen("cat.jpg", "rb");
   ASSERT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)jpeg_img_new(fp);
@@ -46,7 +46,7 @@ TEST(JPEGTest, NewJPEGImgInvalidMagic) {
   FILE *fp;
   struct img_s *img;
 
-  fp = fopen("invalid-magic.jpg", "r");
+  fp = fopen("invalid-magic.jpg", "rb");
   EXPECT_THAT(fp, Not(IsNull()));
 
   img = (struct img_s *)jpeg_img_new(fp);
