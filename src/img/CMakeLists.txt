@@ -9,9 +9,13 @@ add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)
 set_target_properties(img_static PROPERTIES OUTPUT_NAME img)
 
-add_library(img_shared SHARED)
-target_link_libraries(img_shared img_obj)
-set_target_properties(img_shared PROPERTIES OUTPUT_NAME img)
+if(WIN32)
+  target_link_libraries(img_obj PRIVATE ws2_32)
+
+  add_library(img_shared SHARED)
+  target_link_libraries(img_shared img_obj)
+  set_target_properties(img_shared PROPERTIES OUTPUT_NAME img)
+endif()
 
 EnableCoverage(img_obj)
 CleanCoverage(img_static)
