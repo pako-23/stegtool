@@ -1,6 +1,5 @@
 #include <img/img.h>
 #include <img/png.h>
-#include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
