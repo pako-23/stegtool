@@ -20,3 +20,6 @@ endif()
 
 EnableCoverage(stegtool_obj)
 CleanCoverage(stegtool_static)
+
+add_executable(stegtool main.c)
+target_link_libraries(stegtool stegtool_static)
