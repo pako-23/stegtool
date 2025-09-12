@@ -1,7 +1,7 @@
 #ifndef STEGTOOL_H_INCLUDED
 #define STEGTOOL_H_INCLUDED
 
-#include <cstddef>
+#include <stddef.h>
 #include <stdint.h>
 #include <img/img.h>
 
