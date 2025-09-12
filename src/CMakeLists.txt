@@ -6,6 +6,7 @@ add_library(stegtool_obj OBJECT stegtool.c)
 target_include_directories(stegtool_obj PUBLIC include)
 set_target_properties(stegtool_obj PROPERTIES
   POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(stegtool_obj img_static)
 
 add_library(stegtool_static STATIC)
 target_link_libraries(stegtool_static stegtool_obj)
