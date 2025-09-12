@@ -1,3 +1,5 @@
+#include <stegtool.h>
+
 int sg_embed(struct img_s* img, const char* msg, size_t len) {
 	return 0;
 }
