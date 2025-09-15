@@ -17,7 +17,11 @@ option(stegtool_BUILD_TESTS "Build test programs" ON)
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
-add_compile_options("$<$<CONFIG:Debug>:-g3>")
+if(MSVC)
+  add_compile_options(/W4 "$<$<CONFIG:Debug>:/Zi>")
+else()
+  add_compile_options("$<$<CONFIG:Debug>:-g3>" -Wall -Wextra -Wpedantic)
+endif()
 
 add_subdirectory(src)
 
