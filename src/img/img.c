@@ -8,98 +8,97 @@
 
 struct img_s *img_from_file(const char *fname)
 {
-	FILE *fp;
-	unsigned char magic[8];
-	struct img_s *img = NULL;
-	size_t nread;
-	size_t n;
+    FILE *fp;
+    unsigned char magic[8];
+    struct img_s *img = NULL;
+    size_t nread;
+    size_t n;
 
-	fp = fopen(fname, "rb");
-	if (fp == NULL)
-		return NULL;
+    fp = fopen(fname, "rb");
+    if (fp == NULL)
+        return NULL;
 
-	n = sizeof(jpeg_magic);
-	nread = fread(magic, 1, n, fp);
-	if (nread != n)
-		goto end;
+    n = sizeof(jpeg_magic);
+    nread = fread(magic, 1, n, fp);
+    if (nread != n)
+        goto end;
 
-	if (memcmp(magic, jpeg_magic, n) == 0) {
-		rewind(fp);
-		img = (struct img_s *)jpeg_img_new(fp);
-		goto end;
-	}
+    if (memcmp(magic, jpeg_magic, n) == 0) {
+        rewind(fp);
+        img = (struct img_s *)jpeg_img_new(fp);
+        goto end;
+    }
 
-	nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
-	if (nread != sizeof(png_magic) - n)
-		goto end;
+    nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
+    if (nread != sizeof(png_magic) - n)
+        goto end;
 
-	if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
-		rewind(fp);
-		img = (struct img_s *)png_img_new(fp);
-	}
+    if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
+        rewind(fp);
+        img = (struct img_s *)png_img_new(fp);
+    }
 
- end:
-	fclose(fp);
-	return img;
+end:
+    fclose(fp);
+    return img;
 }
 
 void img_destroy(struct img_s *img)
 {
-	img->ops->destroy(img);
+    img->ops->destroy(img);
 }
 
 size_t img_width(const struct img_s *img)
 {
-	return img->width;
+    return img->width;
 }
 
 size_t img_height(const struct img_s *img)
 {
-	return img->height;
+    return img->height;
 }
 
 int img_save(const struct img_s *img, const char *fname)
 {
+    FILE *fp;
+    int ret;
 
-	FILE *fp;
-	int ret;
+    fp = fopen(fname, "wb");
+    if (fp == NULL)
+        return -1;
 
-	fp = fopen(fname, "wb");
-	if (fp == NULL)
-		return -1;
+    ret = img->ops->save(img, fp);
 
-	ret = img->ops->save(img, fp);
-
-	fclose(fp);
-	return ret;
+    fclose(fp);
+    return ret;
 }
 
 struct img_it *img_iterator(struct img_s *img)
 {
-	return img->ops->iterator(img);
+    return img->ops->iterator(img);
 }
 
 void img_it_destroy(struct img_it *it)
 {
-	it->ops->destroy(it);
+    it->ops->destroy(it);
 }
 
 void img_it_next(struct img_it *it)
 {
-	it->ops->next(it);
+    it->ops->next(it);
 }
 
 int img_it_has_next(const struct img_it *it)
 {
-	return it->ops->has_next(it);
+    return it->ops->has_next(it);
 }
 
 void img_it_read(const struct img_it *it, struct pixel_s *pixel)
 {
-	it->ops->read(it, pixel);
+    it->ops->read(it, pixel);
 }
 
 void img_it_write(const struct img_it *it, const struct pixel_s *pixel)
 {
-	it->ops->write(it, pixel);
+    it->ops->write(it, pixel);
 }

@@ -10,8 +10,9 @@ endif()
 
 function(EnableCoverage target)
   if(WITH_COVERAGE)
-    target_compile_options(${target} PRIVATE
-      --coverage -fno-inline -fprofile-update=atomic)
+    target_compile_options(${target}
+      PRIVATE --coverage -fno-inline -fprofile-update=atomic
+    )
     target_link_libraries(${target} PRIVATE gcov)
   endif()
 endfunction()

@@ -1,9 +1,23 @@
 include(coverage)
 
+FetchContent_Declare(
+  libpng
+  GIT_REPOSITORY https://github.com/pnggroup/libpng
+  GIT_TAG        v1.6.50
+)
+set(PNG_SHARED OFF CACHE BOOL "" FORCE)
+set(PNG_TESTS OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(libpng)
+
+
+set_target_properties(png_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 add_library(img_obj OBJECT img.c jpeg.c png.c)
 target_include_directories(img_obj PUBLIC include)
 set_target_properties(img_obj PROPERTIES
   POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(img_obj PRIVATE png_static)
 
 add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)
