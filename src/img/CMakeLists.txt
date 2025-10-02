@@ -1,6 +1,14 @@
 include(coverage)
 
 FetchContent_Declare(
+    zlib
+    GIT_REPOSITORY https://github.com/madler/zlib
+    GIT_TAG        v1.3.1
+)
+
+FetchContent_MakeAvailable(zlib)
+
+FetchContent_Declare(
   libpng
   GIT_REPOSITORY https://github.com/pnggroup/libpng
   GIT_TAG        v1.6.50
