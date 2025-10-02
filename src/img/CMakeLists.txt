@@ -13,6 +13,7 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/pnggroup/libpng
   GIT_TAG        v1.6.50
 )
+set(ZLIB_ROOT "${zlib_SOURCE_DIR}" CACHE STRING "" FORCE)
 set(PNG_SHARED OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
 
