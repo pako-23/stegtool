@@ -1,15 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "include\stegtool.h"
+#include <stegtool.h>
 
 int main(int argc, const char *argv[]) 
 { 
-	const char *filename = argv[1];
-	const char *o_filename; 
+	const char *img = NULL;
+	const char *msg = NULL;
 
-	FILE *fp = fopen(filename, "rb+");
-	if (!fp) 
-		return 1;
+	const char *output; 
+
 
 	if (strcmp(argv[2], "-h") == 0) {
 		printf("Help page\n");
