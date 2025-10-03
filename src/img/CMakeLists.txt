@@ -8,8 +8,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(zlib)
 set(ZLIB_ROOT "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
-set(ZLIB_LIBRARY "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
-set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" CACHE STRING "" FORCE)
+set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}"
+  CACHE STRING "" FORCE)
+
+set_target_properties(zlibstatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 FetchContent_Declare(
   libpng
@@ -20,7 +22,6 @@ set(PNG_SHARED OFF CACHE BOOL "" FORCE)
 set(PNG_TESTS OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(libpng)
-
 
 set_target_properties(png_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -34,7 +35,9 @@ add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)
 set_target_properties(img_static PROPERTIES OUTPUT_NAME img)
 
-if(NOT WIN32)
+if(WIN32)
+  target_link_libraries(img_obj PRIVATE ws2_32)
+else()
   add_library(img_shared SHARED)
   target_link_libraries(img_shared img_obj)
   set_target_properties(img_shared PROPERTIES OUTPUT_NAME img)
