@@ -1,39 +1,27 @@
 #include <img/img.h>
 #include <img/png.h>
-#include <stdint.h>
+#include <png.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
-
-struct chunk {
-	uint32_t len;
-	unsigned char type[4];
-	struct chunk *next;
-	unsigned char data[];
-};
 
 struct png_img_s {
-	struct img_s super;
-	struct chunk *head;
-	struct chunk *tail;
+    struct img_s super;
+    png_structp read;
+    png_infop info;
+    png_bytepp rows;
 };
 
 struct png_img_it {
     struct img_it super;
-    const struct png_img_s *img;
-    struct chunk *node;
-    unsigned char *pixel;
+    size_t width;
+    size_t height;
+    size_t row;
+    size_t col;
 };
 
-static int init(struct img_s *img, FILE * fp);
+static int init(struct img_s *img, FILE *fp);
 static void destroy(struct img_s *img);
-
 static int save(const struct img_s *img, FILE *fp);
 static struct img_it *iterator(struct img_s *img);
 
@@ -43,11 +31,8 @@ static int has_next(const struct img_it *it);
 static void read(const struct img_it *it, struct pixel_s *p);
 static void write(const struct img_it *it, const struct pixel_s *p);
 
-
 const unsigned char png_magic[8] = { 0x89, 0x50, 0x4e, 0x47,
-	0x0d, 0x0a, 0x1a, 0x0a
-};
-static const unsigned char iend_chunk[4] = { 'I', 'E', 'N', 'D' };
+                                     0x0d, 0x0a, 0x1a, 0x0a };
 
 static const struct img_ops_s ops = {
     .init = init,
@@ -64,169 +49,83 @@ static const struct img_it_ops it_ops = {
     .write = write,
 };
 
-
 struct png_img_s *png_img_new(FILE *fp)
 {
-	struct png_img_s *png;
-	struct img_s *img;
+    struct png_img_s *png;
+    struct img_s *img;
 
-	png = malloc(sizeof(struct png_img_s));
-	if (png == NULL) {
-		fclose(fp);
-		return NULL;
-	}
+    png = malloc(sizeof(struct png_img_s));
+    if (png == NULL)
+        return NULL;
 
-	img = (struct img_s *)png;
+    img = (struct img_s *)png;
+    png->super.ops = &ops;
 
-	png->super.ops = &ops;
-	png->head = NULL;
-	png->tail = NULL;
+    if (png->super.ops->init(img, fp) < 0) {
+        free(img);
+        return NULL;
+    }
 
-	if (png->super.ops->init(img, fp) < 0) {
-		img_destroy(img);
-		return NULL;
-	}
-
-	return png;
+    return png;
 }
 
 static int init(struct img_s *img, FILE *fp)
 {
-	unsigned char header[8];
-	unsigned char crc[4];
-	uint32_t len;
-	struct png_img_s *png = (struct png_img_s *)img;
-	struct chunk *c;
+    unsigned char header[8];
+    struct png_img_s *pngimg = (struct png_img_s *)img;
 
-	if (fread(header, 1, 8, fp) != 8
-	    || memcmp(header, png_magic, sizeof(header)) != 0)
-		return -1;
+    if (fread(header, 1, 8, fp) != 8 ||
+        memcmp(header, png_magic, sizeof(header)) != 0)
+        return -1;
 
-	while (1) {
-		if (fread(header, 1, 8, fp) != 8)
-			return -1;
+    rewind(fp);
+    pngimg->read =
+            png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (pngimg->read == NULL)
+        return -1;
 
-		len = ntohl(*((uint32_t *) header));
-		c = malloc(sizeof(struct chunk) + len);
-		if (c == NULL)
-			return -1;
+    pngimg->info = png_create_info_struct(pngimg->read);
+    if (pngimg->info == NULL) {
+        png_destroy_read_struct(&pngimg->read, NULL, NULL);
+        return -1;
+    }
 
-		if (len > 0 && fread(c->data, 1, len, fp) != len) {
-			free(c);
-			return -1;
-		}
+    png_init_io(pngimg->read, fp);
+    png_read_png(pngimg->read, pngimg->info, PNG_TRANSFORM_IDENTITY, NULL);
+    img->height = png_get_image_height(pngimg->read, pngimg->info);
+    img->width = png_get_image_width(pngimg->read, pngimg->info);
+    pngimg->rows = png_get_rows(pngimg->read, pngimg->info);
 
-		if (fread(crc, 1, 4, fp) != 4) {
-			free(c);
-			return -1;
-		}
-
-		c->len = len;
-		memcpy(c->type, header + 4, 4);
-
-		c->next = NULL;
-		if (png->head == NULL)
-			png->head = c;
-		else
-			png->tail->next = c;
-		png->tail = c;
-
-		if (memcmp(c->type, iend_chunk, sizeof(c->type)) == 0)
-			break;
-	}
-
-	png->super.width = ntohl(*((uint32_t *) png->head->data));
-	png->super.height = ntohl(*((uint32_t *) (png->head->data + 4)));
-
-	return 0;
+    return 0;
 }
 
 static void destroy(struct img_s *img)
 {
-	struct chunk *n;
-	struct png_img_s *png = (struct png_img_s *)img;
+    struct png_img_s *pngimg = (struct png_img_s *)img;
 
-	while (png->head != NULL) {
-		n = png->head;
-		png->head = n->next;
-		free(n);
-	}
-
-	free(png);
-}
-
-static void make_crc_table(uint32_t table[256])
-{
-	uint32_t c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-		for (k = 0; k < 8; k++) {
-			if (c & 1)
-				c = 0xedb88320L ^ (c >> 1);
-			else
-				c = c >> 1;
-		}
-
-		table[n] = c;
-	}
+    png_destroy_read_struct(&pngimg->read, &pngimg->info, NULL);
+    free(img);
 }
 
 static int save(const struct img_s *img, FILE *fp)
 {
-	struct chunk *p;
-	const struct png_img_s *png = (const struct png_img_s *)img;
-	uint32_t len;
-	uint32_t crc_table[256];
-	int n;
-	uint32_t crc;
+    png_structp png;
+    struct png_img_s *pngimg = (struct png_img_s *)img;
 
-	if (fwrite(png_magic, 1, 8, fp) != 8)
-		return -1;
+    png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png == NULL)
+        return -1;
 
-	make_crc_table(crc_table);
+    png_init_io(png, fp);
+    png_set_rows(png, pngimg->info, pngimg->rows);
+    png_write_png(png, pngimg->info, PNG_TRANSFORM_IDENTITY, NULL);
+    png_destroy_write_struct(&png, NULL);
 
-	for (p = png->head; p != NULL; p = p->next) {
-		len = htonl(p->len);
-		if (fwrite(&len, 1, 4, fp) != 4
-		    || fwrite(p->type, 1, 4, fp) != 4)
-			return -1;
-
-		if (p->len != 0 && fwrite(p->data, 1, p->len, fp) != p->len)
-			return -1;
-
-		crc = 0xffffffff;
-
-		for (n = 0; n < 4; n++)
-			crc = crc_table[(crc ^ p->type[n]) & 0xff] ^ (crc >> 8);
-
-		for (n = 0; n < p->len; n++)
-			crc = crc_table[(crc ^ p->data[n]) & 0xff] ^ (crc >> 8);
-
-		crc = crc ^ 0xffffffff;
-		crc = htonl(crc);
-
-		if (fwrite(&crc, 1, 4, fp) != 4)
-			return -1;
-	}
-
-	return 0;
+    return 0;
 }
 
-static size_t pixel_size(const struct png_img_s *img) {
-    return 4;
-}
-
-static struct chunk *chunk_advance(struct chunk *it) {
-    static unsigned char idat_chunk[4] = {'I', 'D', 'A', 'T' };
-
-    for (; it != NULL && memcmp(it->type, idat_chunk, 4) != 0; it = it->next)
-        ;
-
-    return it;
-}
-
-static struct img_it *iterator(struct img_s *img) {
+static struct img_it *iterator(struct img_s *img)
+{
     struct png_img_it *it;
 
     it = malloc(sizeof(struct png_img_it));
@@ -234,32 +133,40 @@ static struct img_it *iterator(struct img_s *img) {
         return NULL;
 
     it->super.ops = &it_ops;
-    it->img = (const struct png_img_s *)img;
-    it->node = chunk_advance(((struct png_img_s *)img)->head);
-    if (it->node != NULL) it->pixel = it->node->data;
+    it->height = img_height(img);
+    it->width = img_width(img);
+    it->col = 0;
+    it->row = 0;
 
     return &it->super;
 }
 
-static void it_destroy(struct img_it *it) {
+static void it_destroy(struct img_it *it)
+{
     free(it);
 }
 
-static void next(struct img_it *it) {
-    struct png_img_it *pos = (struct png_img_it *)it;
-    
-    pos->pixel += pixel_size(pos->img);
-    if (pos->pixel < pos->node->data + pos->node->len)
-        return;
+static void next(struct img_it *it)
+{
+    struct png_img_it *pit = (struct png_img_it *)it;
 
-    pos->node = chunk_advance(pos->node->next);
-    if (pos->node != NULL) pos->pixel = pos->node->data;
+    if (++pit->col >= pit->width) {
+        pit->col = 0;
+        ++pit->row;
+    }
 }
 
-static int has_next(const struct img_it *it) {
-    return ((struct png_img_it *)it)->node != NULL;
+static int has_next(const struct img_it *it)
+{
+    struct png_img_it *pit = (struct png_img_it *)it;
+
+    return pit->row < pit->height;
 }
 
-static void read(const struct img_it *it, struct pixel_s *p) {}
+static void read(const struct img_it *it, struct pixel_s *p)
+{
+}
 
-static void write(const struct img_it *it, const struct pixel_s *p) {}
+static void write(const struct img_it *it, const struct pixel_s *p)
+{
+}

@@ -6,38 +6,38 @@
 #include <stdio.h>
 
 struct pixel_s {
-	uint8_t red;
-	uint8_t green;
-	uint8_t blue;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
 };
 
 struct img_it;
 
 struct img_it_ops {
-	void (*destroy)(struct img_it *);
-	void (*next)(struct img_it *);
-	int (*has_next)(const struct img_it *);
-	void (*read)(const struct img_it *, struct pixel_s *);
-	void (*write)(const struct img_it *, const struct pixel_s *);
+    void (*destroy)(struct img_it *);
+    void (*next)(struct img_it *);
+    int (*has_next)(const struct img_it *);
+    void (*read)(const struct img_it *, struct pixel_s *);
+    void (*write)(const struct img_it *, const struct pixel_s *);
 };
 
 struct img_it {
-	const struct img_it_ops *ops;
+    const struct img_it_ops *ops;
 };
 
 struct img_s;
 
 struct img_ops_s {
-	int (*init)(struct img_s *, FILE *);
-	void (*destroy)(struct img_s *);
-	int (*save)(const struct img_s *, FILE *);
-	struct img_it *(*iterator) (struct img_s *);
+    int (*init)(struct img_s *, FILE *);
+    void (*destroy)(struct img_s *);
+    int (*save)(const struct img_s *, FILE *);
+    struct img_it *(*iterator)(struct img_s *);
 };
 
 struct img_s {
-	const struct img_ops_s *ops;
-	size_t width;
-	size_t height;
+    const struct img_ops_s *ops;
+    size_t width;
+    size_t height;
 };
 
 struct img_s *img_from_file(const char *fname);

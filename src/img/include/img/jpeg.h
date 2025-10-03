@@ -7,6 +7,6 @@ struct jpeg_img_s;
 
 extern const unsigned char jpeg_magic[3];
 
-struct jpeg_img_s *jpeg_img_new(FILE * fp);
+struct jpeg_img_s *jpeg_img_new(FILE *fp);
 
 #endif
