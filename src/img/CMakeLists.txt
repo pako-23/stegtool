@@ -11,12 +11,6 @@ set(ZLIB_ROOT "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
 set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}"
   CACHE STRING "" FORCE)
 set_target_properties(zlibstatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
-if(WIN32)
-  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/zlibstatic.lib" CACHE STRING "" FORCE)
-else()
-  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/zlib.a" CACHE STRING "" FORCE)
-endif()
-
 
 FetchContent_Declare(
   libpng
