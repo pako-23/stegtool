@@ -14,7 +14,7 @@ set_target_properties(zlibstatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(WIN32)
   set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/libz.lib" CACHE STRING "" FORCE)
 else()
-  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/libz.a" CACHE STRING "" FORCE)
+  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/zlibstatic.a" CACHE STRING "" FORCE)
 endif()
 
 
