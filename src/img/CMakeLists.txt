@@ -8,10 +8,17 @@ FetchContent_Declare(
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(ZLIB)
 
-set(ZLIB_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 set(ZLIB_ROOT "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
 set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}"
   CACHE STRING "" FORCE)
+
+if(WIN32)
+  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/zlib.lib" CACHE STRING "" FORCE)
+else()
+  set(ZLIB_LIBRARY "${zlib_BINARY_DIR}/zlib.a" CACHE STRING "" FORCE)
+endif()
+
+set_target_properties(zlibstatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 FetchContent_Declare(
   libpng
