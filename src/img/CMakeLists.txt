@@ -8,6 +8,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(zlib)
 set(ZLIB_ROOT "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
+set(ZLIB_LIBRARY "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
+set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" CACHE STRING "" FORCE)
 
 FetchContent_Declare(
   libpng
@@ -32,9 +34,7 @@ add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)
 set_target_properties(img_static PROPERTIES OUTPUT_NAME img)
 
-if(WIN32)
-  target_link_libraries(img_obj PRIVATE ws2_32)
-else()
+if(NOT WIN32)
   add_library(img_shared SHARED)
   target_link_libraries(img_shared img_obj)
   set_target_properties(img_shared PROPERTIES OUTPUT_NAME img)
