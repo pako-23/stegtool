@@ -12,6 +12,7 @@ if(WIN32)
   set(ZLIB_ROOT ${zlib_BINARY_DIR} CACHE INTERNAL "" FORCE)
   set(ZLIB_LIBRARY zlibstatic CACHE INTERNAL "" FORCE)
   set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} CACHE INTERNAL "" FORCE)
+  set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR} CACHE INTERNAL "" FORCE)
 
   include_directories(${ZLIB_INCLUDE_DIR})
   add_library(ZLIB::ZLIB ALIAS zlibstatic)
