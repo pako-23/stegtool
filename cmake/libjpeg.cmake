@@ -19,4 +19,5 @@ ExternalProject_Add(
 add_library(libjpeg_static STATIC IMPORTED)
 set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
                                                 ${libjpeg_BINARY_DIR}/libjpeg.a)
+target_link_directories(libjpeg_static PUBLIC ${libjpeg_SOURCE_DIR}/src)
 add_dependencies(libjpeg_static libjpeg)
