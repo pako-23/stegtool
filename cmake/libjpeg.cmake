@@ -18,6 +18,12 @@ ExternalProject_Add(
   STEP_TARGETS libjpeg)
 
 add_library(libjpeg_static STATIC IMPORTED)
-set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
-                                                ${libjpeg_BINARY_DIR}/libjpeg.a)
+if(WIN32)
+  set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
+    ${libjpeg_BINARY_DIR}/libjpeg.lib)
+else()
+  set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
+    ${libjpeg_BINARY_DIR}/libjpeg.a)
+endif()
+
 add_dependencies(libjpeg_static libjpeg)
