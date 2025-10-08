@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.27 FATAL_ERROR)
 
-project(stegtool
+project(
+  stegtool
   VERSION 0.0.1
   LANGUAGES C CXX
   DESCRIPTION "An image steganography tool")
@@ -16,6 +17,7 @@ option(stegtool_BUILD_TESTS "Build test programs" ON)
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
+include(ExternalProject)
 
 if(MSVC)
   add_compile_options(/W4 "$<$<CONFIG:Debug>:/Zi>")
