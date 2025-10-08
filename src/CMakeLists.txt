@@ -11,12 +11,6 @@ add_library(stegtool_static STATIC)
 target_link_libraries(stegtool_static stegtool_obj)
 set_target_properties(stegtool_static PROPERTIES OUTPUT_NAME stegtool)
 
-if(NOT WIN32)
-  add_library(stegtool_shared SHARED)
-  target_link_libraries(stegtool_shared img_obj)
-  set_target_properties(stegtool_shared PROPERTIES OUTPUT_NAME stegtool)
-endif()
-
 enablecoverage(stegtool_obj)
 cleancoverage(stegtool_static)
 

@@ -21,5 +21,3 @@ set(SKIP_INSTALL_ALL
     ON
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(libpng)
-
-set_target_properties(png_static PROPERTIES POSITION_INDEPENDENT_CODE ON)
