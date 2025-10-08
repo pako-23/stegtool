@@ -20,7 +20,7 @@ ExternalProject_Add(
 add_library(libjpeg_static STATIC IMPORTED)
 if(WIN32)
   set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
-    ${libjpeg_BINARY_DIR}/libjpeg.lib)
+    ${libjpeg_BINARY_DIR}/jpeg-static.lib)
 else()
   set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
     ${libjpeg_BINARY_DIR}/libjpeg.a)
