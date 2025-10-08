@@ -5,8 +5,6 @@ extern "C" {
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <fstream>
-
 using namespace testing;
 
 TEST(PNGTest, ImgFromFile)

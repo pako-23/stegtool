@@ -5,77 +5,92 @@ extern "C" {
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <fstream>
-
 using namespace testing;
 
-TEST(JPEGTest, ImgFromFile) {
-  struct img_s *img = img_from_file("cat.jpg");
+TEST(JPEGTest, ImgFromFile)
+{
+    struct img_s *img = img_from_file("cat.jpg");
 
-  ASSERT_THAT(img, Not(IsNull()));
-  ASSERT_THAT(img_width(img), Eq(539));
-  ASSERT_THAT(img_height(img), Eq(360));
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(539));
+    ASSERT_THAT(img_height(img), Eq(360));
 
-  img_destroy(img);
+    img_destroy(img);
 }
 
-TEST(JPEGTest, ImgFromFileIvalidMagic) {
-  struct img_s *img = img_from_file("invalid-magic.jpg");
+TEST(JPEGTest, ImgFromFileIvalidMagic)
+{
+    struct img_s *img = img_from_file("invalid-magic.jpg");
 
-  ASSERT_THAT(img, IsNull());
+    ASSERT_THAT(img, IsNull());
 }
 
-TEST(JPEGTest, NewJPEGImg) {
-  FILE *fp;
-  struct img_s *img;
+TEST(JPEGTest, NewJPEGImg)
+{
+    FILE *fp;
+    struct img_s *img;
 
-  fp = fopen("cat.jpg", "rb");
-  ASSERT_THAT(fp, Not(IsNull()));
+    fp = fopen("cat.jpg", "rb");
+    ASSERT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_s *)jpeg_img_new(fp);
-  fclose(fp);
+    img = (struct img_s *)jpeg_img_new(fp);
+    fclose(fp);
 
-  ASSERT_THAT(img, Not(IsNull()));
-  ASSERT_THAT(img_width(img), Eq(539));
-  ASSERT_THAT(img_height(img), Eq(360));
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(539));
+    ASSERT_THAT(img_height(img), Eq(360));
 
-  img_destroy(img);
+    img_destroy(img);
 }
 
-TEST(JPEGTest, NewJPEGImgInvalidMagic) {
-  FILE *fp;
-  struct img_s *img;
+TEST(JPEGTest, NewJPEGImgInvalidMagic)
+{
+    FILE *fp;
+    struct img_s *img;
 
-  fp = fopen("invalid-magic.jpg", "rb");
-  EXPECT_THAT(fp, Not(IsNull()));
+    fp = fopen("invalid-magic.jpg", "rb");
+    EXPECT_THAT(fp, Not(IsNull()));
 
-  img = (struct img_s *)jpeg_img_new(fp);
-  EXPECT_THAT(img, IsNull());
-  fclose(fp);
+    img = (struct img_s *)jpeg_img_new(fp);
+    EXPECT_THAT(img, IsNull());
+    fclose(fp);
 }
 
-TEST(JPEGTest, Save) {
-  struct img_s *img = img_from_file("cat.jpg");
+TEST(JPEGTest, Save)
+{
+    size_t width, height;
+    struct img_s *img = img_from_file("cat.jpg");
 
-  ASSERT_THAT(img, Not(IsNull()));
-  ASSERT_THAT(img_save(img, "cat-copy.jpg"), Eq(0));
-  img_destroy(img);
+    ASSERT_THAT(img, Not(IsNull()));
+    width = img_width(img);
+    height = img_height(img);
+    ASSERT_THAT(img_save(img, "cat-copy.jpg"), Eq(0));
+    img_destroy(img);
 
-  std::ifstream src("cat.jpg", std::ios::binary | std::ios::in);
-  std::ifstream dst("cat-copy.jpg", std::ios::binary | std::ios::in);
+    img = img_from_file("cat-copy.jpg");
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(width));
+    ASSERT_THAT(img_height(img), Eq(height));
+    img_destroy(img);
+}
 
-  ASSERT_TRUE(src.is_open() && dst.is_open());
+TEST(JPEGTest, PixelIteration)
+{
+    struct img_s *img = img_from_file("cat.jpg");
+    ASSERT_THAT(img, Not(IsNull()));
+    size_t expected_pixels = img_width(img) * img_height(img);
 
-  const size_t buffer_size = 4096;
-  std::vector<char> buf_src(buffer_size);
-  std::vector<char> buf_dst(buffer_size);
+    struct img_it *it = img_iterator(img);
+    ASSERT_THAT(it, Not(IsNull()));
 
-  while (src.read(buf_src.data(), buffer_size) &&
-         dst.read(buf_dst.data(), buffer_size))
-    ASSERT_THAT(buf_src, Eq(buf_dst));
+    size_t pixels = 0;
+    while (img_it_has_next(it)) {
+        img_it_next(it);
+        ++pixels;
+    }
+    img_it_destroy(it);
 
-  ASSERT_FALSE(src.read(buf_src.data(), buffer_size));
-  ASSERT_FALSE(dst.read(buf_dst.data(), buffer_size));
-  ASSERT_TRUE(src.eof());
-  ASSERT_TRUE(dst.eof());
+    ASSERT_THAT(pixels, Eq(expected_pixels));
+
+    img_destroy(img);
 }

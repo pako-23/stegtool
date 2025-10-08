@@ -4,8 +4,7 @@ add_subdirectory(img)
 
 add_library(stegtool_obj OBJECT stegtool.c)
 target_include_directories(stegtool_obj PUBLIC include)
-set_target_properties(stegtool_obj PROPERTIES
-  POSITION_INDEPENDENT_CODE ON)
+set_target_properties(stegtool_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(stegtool_obj PRIVATE img_static)
 
 add_library(stegtool_static STATIC)
@@ -18,8 +17,8 @@ if(NOT WIN32)
   set_target_properties(stegtool_shared PROPERTIES OUTPUT_NAME stegtool)
 endif()
 
-EnableCoverage(stegtool_obj)
-CleanCoverage(stegtool_static)
+enablecoverage(stegtool_obj)
+cleancoverage(stegtool_static)
 
 add_executable(stegtool main.c)
 target_link_libraries(stegtool PRIVATE stegtool_static)
