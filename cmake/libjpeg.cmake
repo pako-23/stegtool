@@ -1,7 +1,7 @@
 set(_libjpeg_prefix ${CMAKE_BINARY_DIR}/_deps)
 set(libjpeg_SOURCE_DIR ${_libjpeg_prefix}/libjpeg-turbo-src)
 set(libjpeg_BINARY_DIR ${_libjpeg_prefix}/libjpeg-turbo-build)
-set(libjpeg_INCLUDE_DIR ${libjpeg_SOURCE_DIR}/src)
+set(libjpeg_INCLUDE_DIR ${libjpeg_SOURCE_DIR}/src ${libjpeg_BINARY_DIR})
 
 ExternalProject_Add(
   libjpeg
