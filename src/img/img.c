@@ -92,13 +92,3 @@ int img_it_has_next(const struct img_it *it)
 {
     return it->ops->has_next(it);
 }
-
-void img_it_read(const struct img_it *it, struct pixel_s *pixel)
-{
-    it->ops->read(it, pixel);
-}
-
-void img_it_write(const struct img_it *it, const struct pixel_s *pixel)
-{
-    it->ops->write(it, pixel);
-}

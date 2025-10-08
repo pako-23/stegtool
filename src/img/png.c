@@ -28,8 +28,6 @@ static struct img_it *iterator(struct img_s *img);
 static void it_destroy(struct img_it *it);
 static void next(struct img_it *it);
 static int has_next(const struct img_it *it);
-static void read(const struct img_it *it, struct pixel_s *p);
-static void write(const struct img_it *it, const struct pixel_s *p);
 
 const unsigned char png_magic[8] = { 0x89, 0x50, 0x4e, 0x47,
                                      0x0d, 0x0a, 0x1a, 0x0a };
@@ -45,8 +43,6 @@ static const struct img_it_ops it_ops = {
     .destroy = it_destroy,
     .next = next,
     .has_next = has_next,
-    .read = read,
-    .write = write,
 };
 
 struct png_img_s *png_img_new(FILE *fp)
@@ -161,12 +157,4 @@ static int has_next(const struct img_it *it)
     struct png_img_it *pit = (struct png_img_it *)it;
 
     return pit->row < pit->height;
-}
-
-static void read(const struct img_it *it, struct pixel_s *p)
-{
-}
-
-static void write(const struct img_it *it, const struct pixel_s *p)
-{
 }
