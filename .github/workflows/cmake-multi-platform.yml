@@ -34,6 +34,7 @@ jobs:
       run: |
         pip install cmakelang
         cmake-format --check $(find src/ -name CMakeLists.txt)
+        cmake-format --check CMakeLists.txt
         cmake-format --check $(find tests/ -name CMakeLists.txt)
         cmake-format --check $(find cmake/ -type f)
 
