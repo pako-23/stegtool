@@ -19,11 +19,12 @@ ExternalProject_Add(
 
 add_library(libjpeg_static STATIC IMPORTED)
 if(MSVC)
-  set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
-    ${libjpeg_BINARY_DIR}/Debug/jpeg-static.lib)
+  set_target_properties(
+    libjpeg_static PROPERTIES IMPORTED_LOCATION
+                              ${libjpeg_BINARY_DIR}/Debug/jpeg-static.lib)
 else()
-  set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION
-    ${libjpeg_BINARY_DIR}/libjpeg.a)
+  set_target_properties(
+    libjpeg_static PROPERTIES IMPORTED_LOCATION ${libjpeg_BINARY_DIR}/libjpeg.a)
 endif()
 
 add_dependencies(libjpeg_static libjpeg)

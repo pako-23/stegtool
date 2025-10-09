@@ -24,6 +24,19 @@ jobs:
           fi
         done
 
+  cmake-format:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check CMake formatting
+      run: |
+        pip install cmakelang
+        cmake-format --check $(find src/ -name CMakeLists.txt)
+        cmake-format --check $(find tests/ -name CMakeLists.txt)
+        cmake-format --check $(find cmake/ -type f)
+
   build:
     needs: [format]
     runs-on: ${{ matrix.os }}
