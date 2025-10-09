@@ -151,3 +151,16 @@ jobs:
     - name: Run clang-tidy
       run: |
         clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
+
+  cmake-lint:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check CMake formatting
+      run: |
+        pip install cmakelang
+        cmake-lint $(find src/ -name CMakeLists.txt)
+        cmake-lint $(find tests/ -name CMakeLists.txt)
+        cmake-lint $(find cmake/ -type f)
