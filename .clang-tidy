@@ -7,7 +7,6 @@ ImplementationFileExtensions:
   - c
   - cc
 HeaderFilterRegex: ''
-ExcludeHeaderFilterRegex: ''
 FormatStyle:     none
 CheckOptions:
   cert-arr39-c.WarnOnSizeOfCompareToConstant: 'false'
