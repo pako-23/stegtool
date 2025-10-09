@@ -25,31 +25,8 @@ jobs:
           fi
         done
 
-  lint:
-    runs-on: ubuntu-24.04
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Generate compile_commands.json database
-      run: |
-        cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        mv build/compile_commands.json .
-    - name: Install clang-tidy
-      run: |
-        wget https://apt.llvm.org/llvm.sh
-        chmod +x llvm.sh
-        sudo ./llvm.sh 20
-        sudo apt install clang-tidy-20
-
-    - name: Run clang-tidy
-      run: |
-        ls
-        clang-tidy-20 -version
-        clang-tidy-20 --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
-
   build:
-    needs: [format, lint]
+    needs: [format]
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -92,11 +69,86 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         -S ${{ github.workspace }}
 
-    - name: Build
+    - name: Compile project
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
+    - name: Archive build directory
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifact-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.build_type }}
+        path: ${{ steps.strings.outputs.build-output-dir }}
+        retention-days: 1
+
+  test:
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+        build_type: [Release]
+        c_compiler: [gcc, clang, cl]
+        include:
+          - os: windows-2025
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-24.04
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-24.04
+            c_compiler: clang
+            cpp_compiler: clang++
+        exclude:
+          - os: windows-2025
+            c_compiler: gcc
+          - os: windows-2025
+            c_compiler: clang
+          - os: ubuntu-24.04
+            c_compiler: cl
+
+    steps:
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Download build directory
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifact-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.build_type }}
+        path: ${{ steps.strings.outputs.build-output-dir }}
+      
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }}
+
+  lint:
+    needs: [build]
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Download build directory
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifact-ubuntu-24.04-gcc-Release
+        path: ${{ steps.strings.outputs.build-output-dir }}
+
+    - name: Copy compile_commands.json database
+      run: |
+        cp ${{ steps.strings.outputs.build-output-dir }}/compile_commands.json .
+
+    - name: Run clang-tidy
+      run: |
+        clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
