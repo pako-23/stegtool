@@ -151,4 +151,4 @@ jobs:
 
     - name: Run clang-tidy
       run: |
-        clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
+        clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find tests -name '*.cc')
