@@ -52,8 +52,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      <<: *matrix
-
+      matrix: *matrix
 
     steps:
     - uses: actions/checkout@v4
@@ -89,7 +88,7 @@ jobs:
 
     strategy:
       fail-fast: true
-      <<: *matrix
+      matrix: *matrix
 
     steps:
     - uses: actions/checkout@v4
