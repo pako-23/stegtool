@@ -17,7 +17,8 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Check source code formatting
-      run: >
+      run: |
+        clang-format -version
         pwd
         ls
         for i in $(find src -name '*.c' -o -name '*.h'); do
@@ -28,7 +29,7 @@ jobs:
         done
 
     - name: Check tests formatting
-      run: >
+      run: |
         for i in $(find tests -name '*.cc'); do
           if clang-format --style=Google -n $i 2>&1 | grep -q .; then
             clang-format --style=Google -n $i
