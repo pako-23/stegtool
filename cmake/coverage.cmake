@@ -10,7 +10,7 @@ if(NOT GCOV
   set(WITH_COVERAGE OFF)
 endif()
 
-function(EnableCoverage target)
+function(enable_coverage target)
   if(WITH_COVERAGE)
     target_compile_options(${target} PRIVATE --coverage -fno-inline
                                              -fprofile-update=atomic)
@@ -18,7 +18,7 @@ function(EnableCoverage target)
   endif()
 endfunction()
 
-function(CleanCoverage target)
+function(clean_coverage target)
   if(WITH_COVERAGE)
     add_custom_command(
       TARGET ${target}
@@ -40,7 +40,7 @@ if(WITH_COVERAGE AND NOT TARGET coverage)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
-function(AddCoverage target)
+function(add_coverage target)
   if(WITH_COVERAGE)
     add_custom_target(
       coverage-${target}
