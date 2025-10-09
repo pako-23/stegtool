@@ -102,7 +102,12 @@ jobs:
       with:
         name: build-artifact-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.build_type }}
         path: ${{ steps.strings.outputs.build-output-dir }}
-      
+
+    - name: Fix permissions for executables
+      if: runner.os != 'Windows'
+      run: |
+          find ${{ steps.strings.outputs.build-output-dir }} -type f -name '*_test' -o -name stegtool -exec chmod +x {} \;
+
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }}
