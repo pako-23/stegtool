@@ -163,5 +163,6 @@ jobs:
       run: |
         pip install cmakelang
         cmake-lint $(find src/ -name CMakeLists.txt)
+        cmake-lint CMakeLists.txt
         cmake-lint $(find tests/ -name CMakeLists.txt)
         cmake-lint $(find cmake/ -type f)
