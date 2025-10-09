@@ -25,8 +25,23 @@ jobs:
           fi
         done
 
+  lint:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Generate compile_commands.json database
+      run: |
+        cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        mv build/compile_commands.json .
+
+    - name: Run clang-tidy
+      run: >
+        clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
+
   build:
-    needs: format
+    needs: [format, lint]
     runs-on: ${{ matrix.os }}
 
     strategy:
