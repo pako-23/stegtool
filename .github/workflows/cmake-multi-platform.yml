@@ -45,8 +45,8 @@ jobs:
     - name: Run clang-tidy
       run: |
         ls
-        clang-tidy -version
-        clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
+        clang-tidy-20 -version
+        clang-tidy-20 --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
 
   build:
     needs: [format, lint]
