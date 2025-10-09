@@ -106,7 +106,9 @@ jobs:
     - name: Fix permissions for executables
       if: runner.os != 'Windows'
       run: |
-          find ${{ steps.strings.outputs.build-output-dir }} -type f -name '*_test' -o -name stegtool -exec chmod +x {} \;
+        ls
+        find ${{ steps.strings.outputs.build-output-dir }} -type f -name '*_test' -o -name stegtool
+        find ${{ steps.strings.outputs.build-output-dir }} -type f -name '*_test' -o -name stegtool -exec chmod +x {} \;
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
