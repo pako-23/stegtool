@@ -3,7 +3,8 @@ include(libpng)
 include(libjpeg)
 
 add_library(img_obj OBJECT img.c jpeg.c png.c)
-target_include_directories(img_obj
+target_include_directories(
+  img_obj
   PUBLIC include
   PRIVATE ${libjpeg_INCLUDE_DIR})
 set_target_properties(img_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -13,5 +14,5 @@ add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)
 set_target_properties(img_static PROPERTIES OUTPUT_NAME img)
 
-enablecoverage(img_obj)
-cleancoverage(img_static)
+enable_coverage(img_obj)
+clean_coverage(img_static)

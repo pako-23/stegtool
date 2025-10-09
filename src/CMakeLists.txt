@@ -11,8 +11,8 @@ add_library(stegtool_static STATIC)
 target_link_libraries(stegtool_static stegtool_obj)
 set_target_properties(stegtool_static PROPERTIES OUTPUT_NAME stegtool)
 
-enablecoverage(stegtool_obj)
-cleancoverage(stegtool_static)
+enable_coverage(stegtool_obj)
+clean_coverage(stegtool_static)
 
 add_executable(stegtool main.c)
 target_link_libraries(stegtool PRIVATE stegtool_static)

@@ -1,16 +1,16 @@
-foreach(FILE empty unsupported-format cat.jpg invalid-magic.jpg cat.png
+foreach(file empty unsupported-format cat.jpg invalid-magic.jpg cat.png
              invalid-magic.png)
-  file(COPY ${FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 
 add_executable(img_test img_test.cc)
 target_link_libraries(img_test PRIVATE img_static)
-addtests(img_test)
+add_test(img_test)
 
 add_executable(png_test png_test.cc)
 target_link_libraries(png_test PRIVATE img_static)
-addtests(png_test)
+add_test(png_test)
 
 add_executable(jpeg_test jpeg_test.cc)
 target_link_libraries(jpeg_test PRIVATE img_static)
-addtests(jpeg_test)
+add_test(jpeg_test)

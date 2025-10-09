@@ -26,7 +26,7 @@ if(WITH_MEMCHECK)
   endif()
 endif()
 
-function(AddMemcheck target)
+function(add_memcheck target)
   if(WITH_MEMCHECK)
     add_custom_target(
       memcheck-${target}
