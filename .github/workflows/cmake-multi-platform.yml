@@ -38,7 +38,7 @@ jobs:
         cmake-format --check $(find cmake/ -type f)
 
   build:
-    needs: [format]
+    needs: [format, cmake-format]
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -154,6 +154,7 @@ jobs:
 
   cmake-lint:
     runs-on: ubuntu-24.04
+    needs: [build]
 
     steps:
     - uses: actions/checkout@v4
