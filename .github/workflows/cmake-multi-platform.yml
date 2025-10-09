@@ -35,9 +35,12 @@ jobs:
       run: |
         cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         mv build/compile_commands.json .
+        ls
 
     - name: Run clang-tidy
-      run: >
+      run: |
+        ls
+        clang-tidy -version
         clang-tidy --config-file=.clang-tidy $(find src -name '*.c' -o -name '*.h') $(find src -name '*.cc')
 
   build:

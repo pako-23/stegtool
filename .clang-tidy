@@ -1,5 +1,5 @@
 ---
-Checks:          'bugprone-*,cert-*,clang-analyzer-*,concurrency-*,linuxkernel-*,misc-*,performance-*,portability-*,readability-*'
+Checks:          'bugprone-*,cert-*,clang-analyzer-*,clang-diagnostic-*,concurrency-*,linuxkernel-*,misc-*,performance-*,portability-*,readability-*'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - h
