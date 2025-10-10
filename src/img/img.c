@@ -58,6 +58,11 @@ size_t img_height(const struct img_s *img)
     return img->height;
 }
 
+int img_pixel_size(const struct img_s *img)
+{
+    return img->pixel_size;
+}
+
 int img_save(const struct img_s *img, const char *fname)
 {
     FILE *fp;

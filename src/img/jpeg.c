@@ -8,7 +8,6 @@
 
 struct jpeg_img_s {
     struct img_s super;
-    int pixelsz;
     J_COLOR_SPACE color_space;
     int precision;
     unsigned char *data;
@@ -107,7 +106,7 @@ static int init(struct img_s *img, FILE *fp)
 
     img->width = info.image_width;
     img->height = info.output_height;
-    jpgimg->pixelsz = info.num_components;
+    img->pixel_size = info.num_components;
     jpgimg->color_space = info.out_color_space;
     jpgimg->precision = info.data_precision;
 
@@ -156,16 +155,16 @@ static int save(const struct img_s *img, FILE *fp)
     jpeg_create_compress(&info);
     jpeg_stdio_dest(&info, fp);
 
-    info.image_width = jpgimg->super.width;
-    info.image_height = jpgimg->super.height;
-    info.input_components = jpgimg->pixelsz;
+    info.image_width = img_width(img);
+    info.image_height = img_height(img);
+    info.input_components = img_pixel_size(img);
     info.in_color_space = jpgimg->color_space;
     info.data_precision = jpgimg->precision;
 
     jpeg_set_defaults(&info);
     jpeg_start_compress(&info, TRUE);
 
-    stride = jpgimg->super.width * jpgimg->pixelsz;
+    stride = jpgimg->super.width * img_pixel_size(img);
     while (info.next_scanline < info.image_height) {
         buf = jpgimg->data + info.next_scanline * stride;
         jpeg_write_scanlines(&info, &buf, 1);

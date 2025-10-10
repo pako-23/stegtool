@@ -88,6 +88,8 @@ static int init(struct img_s *img, FILE *fp)
 
     png_init_io(pngimg->read, fp);
     png_read_png(pngimg->read, pngimg->info, PNG_TRANSFORM_IDENTITY, NULL);
+    // FIXME
+    img->pixel_size = 3;
     img->height = png_get_image_height(pngimg->read, pngimg->info);
     img->width = png_get_image_width(pngimg->read, pngimg->info);
     pngimg->rows = png_get_rows(pngimg->read, pngimg->info);

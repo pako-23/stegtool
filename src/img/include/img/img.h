@@ -30,6 +30,7 @@ struct img_s {
     const struct img_ops_s *ops;
     size_t width;
     size_t height;
+    int pixel_size;
 };
 
 struct img_s *img_from_file(const char *fname);
@@ -37,6 +38,7 @@ void img_destroy(struct img_s *img);
 
 size_t img_width(const struct img_s *img);
 size_t img_height(const struct img_s *img);
+int img_pixel_size(const struct img_s *img);
 int img_save(const struct img_s *img, const char *fname);
 
 struct img_it *img_iterator(struct img_s *img);
