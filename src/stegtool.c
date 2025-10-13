@@ -5,7 +5,6 @@
 #include <stegtool.h>
 #include <sys/types.h>
 
-
 int sg_embed(struct img_s *img, const char *msg, uint32_t len)
 {
     int pxsz = img_pixel_size(img);
@@ -21,7 +20,6 @@ int sg_embed(struct img_s *img, const char *msg, uint32_t len)
     if (itr == NULL)
         return -1;
 
-
     pixel = img_it_deref(itr);
     int j = 0;
 
@@ -34,10 +32,10 @@ int sg_embed(struct img_s *img, const char *msg, uint32_t len)
             pixel = img_it_deref(itr);
         }
 
-        if (nlen & mask) 
+        if (nlen & mask)
             pixel[j] |= 1;
-        else 
-            pixel[j] &= ~ 1;
+        else
+            pixel[j] &= ~1;
     }
 
     for (uint32_t k = 0; k < len; k++) {
@@ -49,11 +47,11 @@ int sg_embed(struct img_s *img, const char *msg, uint32_t len)
                 img_it_next(itr);
                 pixel = img_it_deref(itr);
             }
-        
+
             if (msg[k] & mask) {
                 pixel[j] |= 1;
             } else {
-                pixel[j] &= ~ 1;
+                pixel[j] &= ~1;
             }
         }
     }
@@ -99,7 +97,7 @@ int sg_extract_len(struct img_s *img, uint32_t *len)
 
     *len = ntohl(*len);
 
- out:
+out:
     img_it_destroy(itr);
 
     return err;
@@ -107,7 +105,6 @@ int sg_extract_len(struct img_s *img, uint32_t *len)
 
 int sg_extract_msg(struct img_s *img, char *out, uint32_t len)
 {
-    
     int pxsz = img_pixel_size(img);
     struct img_it *itr;
     int err = 0;
@@ -125,7 +122,7 @@ int sg_extract_msg(struct img_s *img, char *out, uint32_t len)
                 err = -1;
                 goto out;
             }
-            
+
             j = 0;
             img_it_next(itr);
             pixel = img_it_deref(itr);
@@ -140,7 +137,7 @@ int sg_extract_msg(struct img_s *img, char *out, uint32_t len)
                     err = -1;
                     goto out;
                 }
-            
+
                 j = 0;
                 img_it_next(itr);
                 pixel = img_it_deref(itr);
@@ -155,8 +152,7 @@ int sg_extract_msg(struct img_s *img, char *out, uint32_t len)
         }
     }
 
-
- out:
+out:
     img_it_destroy(itr);
 
     return err;
