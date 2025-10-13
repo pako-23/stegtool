@@ -13,12 +13,10 @@ struct jpeg_img_s {
     unsigned char *data;
 };
 
-
 static int init(struct img_s *img, FILE *fp);
 static void destroy(struct img_s *img);
 static int save(const struct img_s *img, FILE *fp);
 static uint8_t *pixel(struct img_s *img, size_t x, size_t y);
-
 
 const unsigned char jpeg_magic[3] = { 0xff, 0xd8, 0xff };
 
@@ -28,7 +26,6 @@ static const struct img_ops_s ops = {
     .save = save,
     .pixel = pixel,
 };
-
 
 struct jpeg_img_s *jpeg_img_new(FILE *fp)
 {
@@ -163,7 +160,7 @@ static int save(const struct img_s *img, FILE *fp)
 static uint8_t *pixel(struct img_s *img, size_t row, size_t col)
 {
     struct jpeg_img_s *jpgimg = (struct jpeg_img_s *)img;
-    size_t stride = img_width(img)*img_pixel_size(img);
+    size_t stride = img_width(img) * img_pixel_size(img);
 
-    return jpgimg->data + row*stride + col*img_pixel_size(img);
+    return jpgimg->data + row * stride + col * img_pixel_size(img);
 }

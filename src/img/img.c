@@ -12,7 +12,6 @@ struct img_it {
     size_t col;
 };
 
-
 struct img_s *img_from_file(const char *fname)
 {
     FILE *fp;
@@ -97,7 +96,6 @@ struct img_it *img_iterator(struct img_s *img)
         it->img = img;
         it->row = 0;
         it->col = 0;
-
     }
 
     return it;
