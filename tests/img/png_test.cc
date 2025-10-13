@@ -7,40 +7,43 @@ extern "C" {
 
 using namespace testing;
 
-TEST(PNGTest, ImgFromFile)
-{
-    struct img_s *img = img_from_file("cat.png");
+class PNGTestImg {
+public:
+    PNGTestImg(const char *file, size_t width = 32, size_t height = 32)
+            : file_{ file }
+            , width_{ width }
+            , height_{ height }
+    {
+    }
 
-    ASSERT_THAT(img, Not(IsNull()));
-    ASSERT_THAT(img_width(img), Eq(320));
-    ASSERT_THAT(img_height(img), Eq(395));
+    inline const char *file(void) const
+    {
+        return file_;
+    }
 
-    img_destroy(img);
-}
+    inline size_t width(void) const
+    {
+        return width_;
+    }
+
+    inline size_t height(void) const
+    {
+        return height_;
+    }
+
+private:
+    const char *file_;
+    size_t width_;
+    size_t height_;
+};
+
+class PNGTest : public TestWithParam<PNGTestImg> {};
 
 TEST(PNGTest, ImgFromFileIvalidMagic)
 {
     struct img_s *img = img_from_file("invalid-magic.png");
 
     ASSERT_THAT(img, IsNull());
-}
-
-TEST(PNGTest, NewPNGImg)
-{
-    FILE *fp;
-    struct img_s *img;
-
-    fp = fopen("cat.png", "rb");
-    ASSERT_THAT(fp, Not(IsNull()));
-
-    img = (struct img_s *)png_img_new(fp);
-    fclose(fp);
-
-    ASSERT_THAT(img, Not(IsNull()));
-    ASSERT_THAT(img_width(img), Eq(320));
-    ASSERT_THAT(img_height(img), Eq(395));
-
-    img_destroy(img);
 }
 
 TEST(PNGTest, NewPNGImgInvalidMagic)
@@ -53,10 +56,41 @@ TEST(PNGTest, NewPNGImgInvalidMagic)
 
     img = (struct img_s *)png_img_new(fp);
     ASSERT_THAT(img, IsNull());
-    fclose(fp);
+    (void)fclose(fp);
 }
 
-TEST(PNGTest, Save)
+TEST_P(PNGTest, ImgFromFile)
+{
+    PNGTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
+
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(param.width()));
+    ASSERT_THAT(img_height(img), Eq(param.height()));
+
+    img_destroy(img);
+}
+
+TEST_P(PNGTest, NewPNGImg)
+{
+    FILE *fp;
+    struct img_s *img;
+    PNGTestImg param = GetParam();
+
+    fp = fopen(param.file(), "rb");
+    ASSERT_THAT(fp, Not(IsNull()));
+
+    img = (struct img_s *)png_img_new(fp);
+    (void)fclose(fp);
+
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(param.width()));
+    ASSERT_THAT(img_height(img), Eq(param.height()));
+
+    img_destroy(img);
+}
+
+TEST_P(PNGTest, Save)
 {
     struct img_s *img = img_from_file("cat.png");
     size_t width, height;
@@ -74,11 +108,12 @@ TEST(PNGTest, Save)
     img_destroy(img);
 }
 
-TEST(PNGTest, PixelIteration)
+TEST_P(PNGTest, PixelIteration)
 {
-    struct img_s *img = img_from_file("cat.png");
+    PNGTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
     ASSERT_THAT(img, Not(IsNull()));
-    size_t expected_pixels = img_width(img) * img_height(img);
+    size_t expected_pixels = param.width() * param.height();
 
     struct img_it *it = img_iterator(img);
     ASSERT_THAT(it, Not(IsNull()));
@@ -94,3 +129,15 @@ TEST(PNGTest, PixelIteration)
 
     img_destroy(img);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+        PNGTest, PNGTest,
+        Values(PNGTestImg{ "basn0g01.png" }, PNGTestImg{ "basn0g02.png" },
+               PNGTestImg{ "basn0g04.png" }, PNGTestImg{ "basn0g08.png" },
+               PNGTestImg{ "basn0g16.png" }, PNGTestImg{ "basn2c08.png" },
+               PNGTestImg{ "basn2c16.png" }, PNGTestImg{ "basn3p01.png" },
+               PNGTestImg{ "basn3p02.png" }, PNGTestImg{ "basn3p04.png" },
+               PNGTestImg{ "basn3p08.png" }, PNGTestImg{ "basn4a08.png" },
+               PNGTestImg{ "basn4a16.png" }, PNGTestImg{ "basn6a08.png" },
+               PNGTestImg{ "basn6a16.png" },
+               PNGTestImg{ "cat.png", 320, 395 }));

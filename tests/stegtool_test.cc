@@ -68,7 +68,7 @@ TEST_P(StegtoolTest, ExtractMsg)
 
     extracted = new char[len + 1];
 
-    ASSERT_THAT(sg_extract_msg(img, extracted), Eq(0));
+    ASSERT_THAT(sg_extract_msg(img, extracted, len), Eq(0));
     extracted[len] = '\0';
     ASSERT_THAT(extracted, StrEq(msg));
 

@@ -6,6 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct img_it {
+    struct img_s *img;
+    size_t row;
+    size_t col;
+};
+
+
 struct img_s *img_from_file(const char *fname)
 {
     FILE *fp;
@@ -15,13 +22,15 @@ struct img_s *img_from_file(const char *fname)
     size_t n;
 
     fp = fopen(fname, "rb");
-    if (fp == NULL)
+    if (fp == NULL) {
         return NULL;
+    }
 
     n = sizeof(jpeg_magic);
     nread = fread(magic, 1, n, fp);
-    if (nread != n)
+    if (nread != n) {
         goto end;
+    }
 
     if (memcmp(magic, jpeg_magic, n) == 0) {
         rewind(fp);
@@ -30,8 +39,9 @@ struct img_s *img_from_file(const char *fname)
     }
 
     nread = fread(magic + n, 1, sizeof(png_magic) - n, fp);
-    if (nread != sizeof(png_magic) - n)
+    if (nread != sizeof(png_magic) - n) {
         goto end;
+    }
 
     if (memcmp(magic, png_magic, sizeof(png_magic)) == 0) {
         rewind(fp);
@@ -80,20 +90,38 @@ int img_save(const struct img_s *img, const char *fname)
 
 struct img_it *img_iterator(struct img_s *img)
 {
-    return img->ops->iterator(img);
+    struct img_it *it;
+
+    it = malloc(sizeof(struct img_it));
+    if (it != NULL) {
+        it->img = img;
+        it->row = 0;
+        it->col = 0;
+
+    }
+
+    return it;
 }
 
 void img_it_destroy(struct img_it *it)
 {
-    it->ops->destroy(it);
+    free(it);
 }
 
 void img_it_next(struct img_it *it)
 {
-    it->ops->next(it);
+    if (++it->col >= img_width(it->img)) {
+        it->col = 0;
+        ++it->row;
+    }
 }
 
 int img_it_has_next(const struct img_it *it)
 {
-    return it->ops->has_next(it);
+    return it->row < img_height(it->img);
+}
+
+uint8_t *img_it_deref(const struct img_it *it)
+{
+    return it->img->ops->pixel(it->img, it->row, it->col);
 }

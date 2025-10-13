@@ -1,5 +1,9 @@
-foreach(file empty unsupported-format cat.jpg invalid-magic.jpg cat.png
-             invalid-magic.png)
+file(GLOB_RECURSE test_images
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.png
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.jpg
+)
+
+foreach(file empty unsupported-format ${test_images})
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 

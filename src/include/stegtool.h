@@ -7,7 +7,7 @@
 
 int sg_embed(struct img_s *img, const char *msg, uint32_t len);
 
-int sg_extract_len(const struct img_s *img, uint32_t *len);
-int sg_extract_msg(const struct img_s *img, char *out);
+int sg_extract_len(struct img_s *img, uint32_t *len);
+int sg_extract_msg(struct img_s *img, char *out, uint32_t len);
 
 #endif

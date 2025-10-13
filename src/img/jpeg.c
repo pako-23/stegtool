@@ -13,22 +13,12 @@ struct jpeg_img_s {
     unsigned char *data;
 };
 
-struct jpeg_img_it {
-    struct img_it super;
-    size_t width;
-    size_t height;
-    size_t row;
-    size_t col;
-};
 
 static int init(struct img_s *img, FILE *fp);
 static void destroy(struct img_s *img);
 static int save(const struct img_s *img, FILE *fp);
-static struct img_it *iterator(struct img_s *img);
+static uint8_t *pixel(struct img_s *img, size_t x, size_t y);
 
-static void it_destroy(struct img_it *it);
-static void next(struct img_it *it);
-static int has_next(const struct img_it *it);
 
 const unsigned char jpeg_magic[3] = { 0xff, 0xd8, 0xff };
 
@@ -36,14 +26,9 @@ static const struct img_ops_s ops = {
     .init = init,
     .destroy = destroy,
     .save = save,
-    .iterator = iterator,
+    .pixel = pixel,
 };
 
-static const struct img_it_ops it_ops = {
-    .destroy = it_destroy,
-    .next = next,
-    .has_next = has_next,
-};
 
 struct jpeg_img_s *jpeg_img_new(FILE *fp)
 {
@@ -175,41 +160,10 @@ static int save(const struct img_s *img, FILE *fp)
     return 0;
 }
 
-static struct img_it *iterator(struct img_s *img)
+static uint8_t *pixel(struct img_s *img, size_t row, size_t col)
 {
-    struct jpeg_img_it *it;
+    struct jpeg_img_s *jpgimg = (struct jpeg_img_s *)img;
+    size_t stride = img_width(img)*img_pixel_size(img);
 
-    it = malloc(sizeof(struct jpeg_img_it));
-    if (it == NULL)
-        return NULL;
-
-    it->super.ops = &it_ops;
-    it->height = img_height(img);
-    it->width = img_width(img);
-    it->col = 0;
-    it->row = 0;
-
-    return &it->super;
-}
-
-static void it_destroy(struct img_it *it)
-{
-    free(it);
-}
-
-static void next(struct img_it *it)
-{
-    struct jpeg_img_it *jit = (struct jpeg_img_it *)it;
-
-    if (++jit->col >= jit->width) {
-        jit->col = 0;
-        ++jit->row;
-    }
-}
-
-static int has_next(const struct img_it *it)
-{
-    struct jpeg_img_it *jit = (struct jpeg_img_it *)it;
-
-    return jit->row < jit->height;
+    return jpgimg->data + row*stride + col*img_pixel_size(img);
 }
