@@ -1,9 +1,13 @@
 #include <stdint.h>
 #include <img/img.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stegtool.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 int sg_embed(struct img_s *img, const char *msg, uint32_t len)
 {

@@ -7,6 +7,10 @@ target_include_directories(stegtool_obj PUBLIC include)
 set_target_properties(stegtool_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(stegtool_obj PUBLIC img_static)
 
+if(WIN32)
+  target_link_libraries(stegtool_obj PRIVATE ws2_32)
+endif()
+
 add_library(stegtool_static STATIC)
 target_link_libraries(stegtool_static stegtool_obj)
 set_target_properties(stegtool_static PROPERTIES OUTPUT_NAME stegtool)
