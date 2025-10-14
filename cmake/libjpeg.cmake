@@ -1,30 +1,28 @@
-set(_libjpeg_prefix ${CMAKE_BINARY_DIR}/_deps)
-set(libjpeg_SOURCE_DIR ${_libjpeg_prefix}/libjpeg-turbo-src)
-set(libjpeg_BINARY_DIR ${_libjpeg_prefix}/libjpeg-turbo-build)
+set(libjpeg_SOURCE_DIR ${CMAKE_SOURCE_DIR}/external/libjpeg-turbo)
+set(libjpeg_BINARY_DIR ${CMAKE_BINARY_DIR}/_deps/libjpeg-turbo-build)
 set(libjpeg_INCLUDE_DIR ${libjpeg_SOURCE_DIR}/src ${libjpeg_BINARY_DIR})
 
-ExternalProject_Add(
-  libjpeg
-  GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  GIT_TAG 3.1.2
-  PREFIX ${_libjpeg_prefix}
-  SOURCE_DIR ${libjpeg_SOURCE_DIR}
-  BINARY_DIR ${libjpeg_BINARY_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DENABLE_STATIC=ON -DENABLE_SHARED=OFF
-                    ${libjpeg_SOURCE_DIR}
-  BUILD_COMMAND ${CMAKE_COMMAND} --build ${libjpeg_BINARY_DIR} --target
-                jpeg-static
-  INSTALL_COMMAND ""
-  STEP_TARGETS libjpeg)
+execute_process(
+  COMMAND ${CMAKE_COMMAND}
+          -DENABLE_STATIC=ON
+          -DENABLE_SHARED=OFF
+          -S ${libjpeg_SOURCE_DIR}
+          -B ${libjpeg_BINARY_DIR}
+)
 
-add_library(libjpeg_static STATIC IMPORTED)
+set(_libjpeg_location)
 if(MSVC)
-  set_target_properties(
-    libjpeg_static PROPERTIES IMPORTED_LOCATION
-                              ${libjpeg_BINARY_DIR}/Debug/jpeg-static.lib)
+  set(_libjpeg_location ${libjpeg_BINARY_DIR}/jpeg-static.lib)
 else()
-  set_target_properties(
-    libjpeg_static PROPERTIES IMPORTED_LOCATION ${libjpeg_BINARY_DIR}/libjpeg.a)
+  set(_libjpeg_location ${libjpeg_BINARY_DIR}/libjpeg.a)
 endif()
 
-add_dependencies(libjpeg_static libjpeg)
+add_custom_target(libjpeg_build ALL
+  COMMAND ${CMAKE_COMMAND} --build ${libjpeg_BINARY_DIR}
+  COMMENT "Building libjpeg"
+  VERBATIM
+)
+
+add_library(libjpeg_static STATIC IMPORTED)
+add_dependencies(libjpeg_static libjpeg_build)
+set_target_properties(libjpeg_static PROPERTIES IMPORTED_LOCATION ${_libjpeg_location})

@@ -17,7 +17,6 @@ option(stegtool_BUILD_TESTS "Build test programs" ON)
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
-include(ExternalProject)
 
 if(MSVC)
   add_compile_options(/W4 "$<$<CONFIG:Debug>:/Zi>")
