@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <img/img.h>
-#include <netinet/in.h>
 #include <stegtool.h>
 #include <sys/types.h>
 #ifdef _WIN32
