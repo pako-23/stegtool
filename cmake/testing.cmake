@@ -19,6 +19,7 @@ include(memcheck)
 macro(add_test target)
   add_coverage(${target})
   target_link_libraries(${target} PRIVATE gtest_main gmock)
-  gtest_discover_tests(${target} DISCOVERY_TIMEOUT 600)
+  gtest_discover_tests(${target} NO_PRETTY_TYPES NO_PRETTY_VALUES
+                       DISCOVERY_TIMEOUT 600)
   add_memcheck(${target})
 endmacro()

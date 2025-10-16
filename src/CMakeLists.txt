@@ -18,5 +18,8 @@ set_target_properties(stegtool_static PROPERTIES OUTPUT_NAME stegtool)
 enable_coverage(stegtool_obj)
 clean_coverage(stegtool_static)
 
+add_library(stegtool_run OBJECT run.c)
+target_link_libraries(stegtool_run PUBLIC stegtool_static)
+
 add_executable(stegtool main.c)
-target_link_libraries(stegtool PRIVATE stegtool_static)
+target_link_libraries(stegtool PRIVATE stegtool_run)

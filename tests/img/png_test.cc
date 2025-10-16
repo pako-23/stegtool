@@ -139,5 +139,28 @@ INSTANTIATE_TEST_SUITE_P(
                PNGTestImg{ "basn3p02.png" }, PNGTestImg{ "basn3p04.png" },
                PNGTestImg{ "basn3p08.png" }, PNGTestImg{ "basn4a08.png" },
                PNGTestImg{ "basn4a16.png" }, PNGTestImg{ "basn6a08.png" },
-               PNGTestImg{ "basn6a16.png" },
-               PNGTestImg{ "cat.png", 320, 395 }));
+               PNGTestImg{ "basn6a16.png" }, PNGTestImg{ "ftbbn0g01.png" },
+               PNGTestImg{ "ftbbn0g02.png" }, PNGTestImg{ "ftbbn0g04.png" },
+               PNGTestImg{ "ftbbn2c16.png" }, PNGTestImg{ "ftbbn3p08.png" },
+               PNGTestImg{ "ftbgn2c16.png" }, PNGTestImg{ "ftbgn3p08.png" },
+               PNGTestImg{ "ftbrn2c08.png" }, PNGTestImg{ "ftbwn0g16.png" },
+               PNGTestImg{ "ftbwn3p08.png" }, PNGTestImg{ "ftbyn3p08.png" },
+               PNGTestImg{ "ftp0n0g08.png" }, PNGTestImg{ "ftp0n2c08.png" },
+               PNGTestImg{ "ftp0n3p08.png" }, PNGTestImg{ "ftp1n3p08.png" },
+               PNGTestImg{ "ibasn0g08.png" }, PNGTestImg{ "ibasn0g16.png" },
+               PNGTestImg{ "ibasn2c08.png" }, PNGTestImg{ "ibasn2c16.png" },
+               PNGTestImg{ "ibasn3p08.png" }, PNGTestImg{ "ibasn4a08.png" },
+               PNGTestImg{ "ibasn4a16.png" }, PNGTestImg{ "ibasn6a08.png" },
+               PNGTestImg{ "ibasn6a16.png" }, PNGTestImg{ "iftbbn2c16.png" },
+               PNGTestImg{ "iftbbn3p08.png" }, PNGTestImg{ "iftbgn2c16.png" },
+               PNGTestImg{ "iftbgn3p08.png" }, PNGTestImg{ "iftbrn2c08.png" },
+               PNGTestImg{ "iftbwn0g16.png" }, PNGTestImg{ "iftbwn3p08.png" },
+               PNGTestImg{ "iftbyn3p08.png" }, PNGTestImg{ "iftp0n0g08.png" },
+               PNGTestImg{ "iftp0n2c08.png" }, PNGTestImg{ "iftp0n3p08.png" },
+               PNGTestImg{ "iftp1n3p08.png" },
+               PNGTestImg{ "cat.png", 320, 395 }),
+        [](const testing::TestParamInfo<PNGTestImg> &info) {
+            std::string fname = info.param.file();
+
+            return fname.substr(0, fname.find_last_of('.'));
+        });

@@ -20,3 +20,7 @@ add_test(jpeg_test)
 add_executable(stegtool_test stegtool_test.cc)
 target_link_libraries(stegtool_test PRIVATE stegtool_static)
 add_test(stegtool_test)
+
+add_executable(stegtool_run_test stegtool_run_test.cc)
+target_link_libraries(stegtool_run_test PRIVATE stegtool_run)
+add_test(stegtool_run_test)
