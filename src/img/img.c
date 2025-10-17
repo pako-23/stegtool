@@ -15,10 +15,7 @@ struct img_it {
 struct img_s *img_from_file(const char *fname)
 {
     FILE *fp;
-    unsigned char magic[8];
     struct img_s *img = NULL;
-    size_t nread;
-    size_t n;
 
     fp = fopen(fname, "rb");
     if (fp == NULL) {

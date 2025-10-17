@@ -51,14 +51,13 @@ struct ppm_img_s *ppm_img_new(FILE *fp)
 
 int is_ppm_img(FILE *fp)
 {
-    const size_t n = 2;
-    unsigned char magic[n];
+    unsigned char magic[2];
     size_t nread;
 
-    nread = fread(magic, 1, n, fp);
+    nread = fread(magic, 1, 2, fp);
 
-    int ret = nread == n && (memcmp(ppm3_magic, magic, n) == 0 ||
-                             memcmp(ppm6_magic, magic, n) == 0);
+    int ret = nread == 2 && (memcmp(ppm3_magic, magic, 2) == 0 ||
+                             memcmp(ppm6_magic, magic, 2) == 0);
 
     rewind(fp);
 

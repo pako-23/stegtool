@@ -48,13 +48,12 @@ struct png_img_s *png_img_new(FILE *fp)
 
 int is_png_img(FILE *fp)
 {
-    const size_t n = sizeof(png_magic);
-    unsigned char magic[n];
+    unsigned char magic[8];
     size_t nread;
 
-    nread = fread(magic, 1, n, fp);
+    nread = fread(magic, 1, 8, fp);
 
-    int ret = nread == n && memcmp(png_magic, magic, n) == 0;
+    int ret = nread == 8 && memcmp(png_magic, magic, 8) == 0;
 
     rewind(fp);
 
