@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <jpeglib.h>
 
 struct ppm_img_s {
     struct img_s super;
