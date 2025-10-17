@@ -5,8 +5,7 @@
 
 struct png_img_s;
 
-extern const unsigned char png_magic[8];
-
 struct png_img_s *png_img_new(FILE *fp);
+int is_png_img(FILE *fp);
 
 #endif

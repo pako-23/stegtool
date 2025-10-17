@@ -90,24 +90,6 @@ TEST_P(PNGTest, NewPNGImg)
     img_destroy(img);
 }
 
-TEST_P(PNGTest, Save)
-{
-    struct img_s *img = img_from_file("cat.png");
-    size_t width, height;
-
-    ASSERT_THAT(img, Not(IsNull()));
-    width = img_width(img);
-    height = img_height(img);
-    ASSERT_THAT(img_save(img, "cat-copy.png"), Eq(0));
-    img_destroy(img);
-
-    img = img_from_file("cat-copy.png");
-    ASSERT_THAT(img, Not(IsNull()));
-    ASSERT_THAT(img_width(img), Eq(width));
-    ASSERT_THAT(img_height(img), Eq(height));
-    img_destroy(img);
-}
-
 TEST_P(PNGTest, PixelIteration)
 {
     PNGTestImg param = GetParam();
@@ -128,6 +110,46 @@ TEST_P(PNGTest, PixelIteration)
     ASSERT_THAT(pixels, Eq(expected_pixels));
 
     img_destroy(img);
+}
+
+TEST_P(PNGTest, Save)
+{
+    PNGTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
+    struct img_s *simg;
+    std::string saved = "saved-" + std::string{ param.file() };
+    int pxlsz;
+
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_save(img, saved.c_str()), Eq(0));
+
+    simg = img_from_file(saved.c_str());
+    ASSERT_THAT(simg, Not(IsNull()));
+    ASSERT_THAT(img_width(simg), Eq(img_width(img)));
+    ASSERT_THAT(img_height(simg), Eq(img_height(img)));
+    ASSERT_THAT(img_pixel_size(simg), Eq(img_pixel_size(img)));
+    pxlsz = img_pixel_size(simg);
+
+    struct img_it *it = img_iterator(img);
+    ASSERT_THAT(it, Not(IsNull()));
+
+    struct img_it *sit = img_iterator(simg);
+    ASSERT_THAT(sit, Not(IsNull()));
+
+    while (img_it_has_next(it)) {
+        ASSERT_THAT(img_it_has_next(sit), Not(Eq(0)));
+        uint8_t *pxl = img_it_deref(it);
+        uint8_t *spxl = img_it_deref(sit);
+
+        for (int i = 0; i < pxlsz; ++i)
+            ASSERT_THAT(spxl[i], Eq(pxl[i]));
+
+        img_it_next(it);
+        img_it_next(sit);
+    }
+
+    img_destroy(img);
+    img_destroy(simg);
 }
 
 INSTANTIATE_TEST_SUITE_P(

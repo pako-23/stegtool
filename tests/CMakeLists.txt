@@ -1,5 +1,5 @@
 file(GLOB_RECURSE test_images ${CMAKE_CURRENT_SOURCE_DIR}/*.png
-     ${CMAKE_CURRENT_SOURCE_DIR}/*.jpg)
+     ${CMAKE_CURRENT_SOURCE_DIR}/*.ppm)
 
 foreach(file empty unsupported-format ${test_images})
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -13,9 +13,9 @@ add_executable(png_test img/png_test.cc)
 target_link_libraries(png_test PRIVATE img_static)
 add_test(png_test)
 
-add_executable(jpeg_test img/jpeg_test.cc)
-target_link_libraries(jpeg_test PRIVATE img_static)
-add_test(jpeg_test)
+add_executable(ppm_test img/ppm_test.cc)
+target_link_libraries(ppm_test PRIVATE img_static)
+add_test(ppm_test)
 
 add_executable(stegtool_test stegtool_test.cc)
 target_link_libraries(stegtool_test PRIVATE stegtool_static)

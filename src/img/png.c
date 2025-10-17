@@ -46,9 +46,23 @@ struct png_img_s *png_img_new(FILE *fp)
     return png;
 }
 
+int is_png_img(FILE *fp)
+{
+    const size_t n = sizeof(png_magic);
+    unsigned char magic[n];
+    size_t nread;
+
+    nread = fread(magic, 1, n, fp);
+
+    int ret = nread == n && memcmp(png_magic, magic, n) == 0;
+
+    rewind(fp);
+
+    return ret;
+}
+
 static int init(struct img_s *img, FILE *fp)
 {
-    unsigned char header[8];
     struct png_img_s *pngimg = (struct png_img_s *)img;
     png_byte color_type;
     png_byte bit_depth;
@@ -56,11 +70,8 @@ static int init(struct img_s *img, FILE *fp)
     png_infop info;
     size_t row;
 
-    if (fread(header, 1, 8, fp) != 8 ||
-        memcmp(header, png_magic, sizeof(header)) != 0)
-        return -1;
+    if (!is_png_img(fp)) return -1;
 
-    rewind(fp);
     png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (png == NULL)
         return -1;
