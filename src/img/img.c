@@ -25,13 +25,12 @@ struct img_s *img_from_file(const char *fname)
         return NULL;
     }
 
-
     if (is_png_img(fp)) {
         img = (struct img_s *)png_img_new(fp);
     } else if (is_ppm_img(fp)) {
         img = (struct img_s *)ppm_img_new(fp);
     }
-    
+
     fclose(fp);
     return img;
 }

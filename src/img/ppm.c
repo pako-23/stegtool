@@ -7,7 +7,6 @@
 #include <string.h>
 #include <jpeglib.h>
 
-
 struct ppm_img_s {
     struct img_s super;
     unsigned char *data;
@@ -59,8 +58,8 @@ int is_ppm_img(FILE *fp)
 
     nread = fread(magic, 1, n, fp);
 
-    int ret = nread == n && (memcmp(ppm3_magic, magic, n) == 0
-                             || memcmp(ppm6_magic, magic, n) == 0);
+    int ret = nread == n && (memcmp(ppm3_magic, magic, n) == 0 ||
+                             memcmp(ppm6_magic, magic, n) == 0);
 
     rewind(fp);
 
@@ -83,9 +82,9 @@ static int init(struct img_s *img, FILE *fp)
     if (!is_ppm_img(fp))
         return -1;
 
-    if (fread(magic, 1, 2, fp) != 2) return -1;
+    if (fread(magic, 1, 2, fp) != 2)
+        return -1;
     ppm->version = magic[1] - '0';
-
 
     while ((c = getchar()) != EOF) {
         if (isspace(c))
@@ -95,8 +94,9 @@ static int init(struct img_s *img, FILE *fp)
             do
                 c = getchar();
             while (c != EOF && c != '\n' && c != '\r');
-            
-            if (c == EOF) break;
+
+            if (c == EOF)
+                break;
         } else if (isdigit(c)) {
             size_t value = c - '0';
 
@@ -106,12 +106,12 @@ static int init(struct img_s *img, FILE *fp)
             if (state == 0) {
                 ppm->super.width = value;
                 state = 1;
-            } 
-            
+            }
+
             // TODO read ascii number
         }
     }
-    
+
     return 0;
 }
 

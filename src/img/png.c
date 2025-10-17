@@ -70,7 +70,8 @@ static int init(struct img_s *img, FILE *fp)
     png_infop info;
     size_t row;
 
-    if (!is_png_img(fp)) return -1;
+    if (!is_png_img(fp))
+        return -1;
 
     png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (png == NULL)

@@ -2,9 +2,7 @@ include(coverage)
 include(libpng)
 
 add_library(img_obj OBJECT img.c png.c ppm.c)
-target_include_directories(
-  img_obj
-  PUBLIC include)
+target_include_directories(img_obj PUBLIC include)
 set_target_properties(img_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(img_obj PRIVATE png_static)
 
