@@ -1,14 +1,14 @@
 include(coverage)
 include(libpng)
-include(libjpeg)
 
-add_library(img_obj OBJECT img.c jpeg.c png.c)
-target_include_directories(
-  img_obj
-  PUBLIC include
-  PRIVATE ${libjpeg_INCLUDE_DIR})
+add_library(img_obj OBJECT img.c png.c ppm.c)
+target_include_directories(img_obj PUBLIC include)
 set_target_properties(img_obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(img_obj PRIVATE png_static libjpeg_static)
+target_link_libraries(img_obj PRIVATE png_static)
+
+if(WIN32)
+  target_link_libraries(img_obj PRIVATE ws2_32)
+endif()
 
 add_library(img_static STATIC)
 target_link_libraries(img_static img_obj)

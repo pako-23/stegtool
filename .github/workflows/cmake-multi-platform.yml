@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Check source code formatting
       run: |
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Check CMake formatting
       run: |
@@ -67,7 +67,9 @@ jobs:
           c_compiler: cl
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - name: Set reusable strings
       id: strings
@@ -103,7 +105,9 @@ jobs:
       matrix: *matrix
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        submodules: recursive
 
     - name: Set reusable strings
       id: strings
@@ -131,7 +135,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set reusable strings
       id: strings
