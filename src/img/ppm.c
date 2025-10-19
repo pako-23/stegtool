@@ -1,11 +1,15 @@
 #include <ctype.h>
 #include <img/img.h>
 #include <img/ppm.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 struct ppm_img_s {
     struct img_s super;
