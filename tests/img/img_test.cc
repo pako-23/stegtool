@@ -4,7 +4,6 @@ extern "C" {
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <cstdlib>
-#include <cstdint>
 
 using namespace testing;
 
@@ -13,6 +12,8 @@ struct img_mock {
     bool destroy_called;
     bool save_called;
     size_t row, col;
+    int cmp;
+    int value;
 };
 
 static void img_mock_destroy(struct img_s *img)
@@ -32,19 +33,32 @@ static int img_mock_fail_save(const struct img_s *img, FILE *)
     return -1;
 }
 
-static uint8_t *img_mock_pixel(struct img_s *img, size_t row, size_t col)
+static int img_mock_get_pixel(const struct img_s *img, size_t row, size_t col,
+                              int cmp)
 {
     struct img_mock *mock = (struct img_mock *)img;
     mock->row = row;
     mock->col = col;
+    mock->cmp = cmp;
 
-    return nullptr;
+    return 0;
+}
+
+static void img_mock_set_pixel(struct img_s *img, size_t row, size_t col,
+                               int cmp, int value)
+{
+    struct img_mock *mock = (struct img_mock *)img;
+    mock->row = row;
+    mock->col = col;
+    mock->cmp = cmp;
+    mock->value = value;
 }
 
 static const struct img_ops_s success_ops = {
     .destroy = img_mock_destroy,
     .save = img_mock_save,
-    .pixel = img_mock_pixel,
+    .get_pixel = img_mock_get_pixel,
+    .set_pixel = img_mock_set_pixel,
 };
 
 static const struct img_ops_s save_fail_ops = {
@@ -200,14 +214,14 @@ TEST(ImgTest, IteratorNotHasNext)
     img_it_destroy(it);
 }
 
-TEST(ImgTest, IteratorDeref)
+TEST(ImgTest, IteratorRead)
 {
     struct img_mock img = {
       .super = {
         .ops = &success_ops,
         .width = 3,
         .height = 2,
-        .pixel_size = 1,
+        .pixel_size = 4,
       },
       .destroy_called = false,
       .save_called = false,
@@ -222,9 +236,50 @@ TEST(ImgTest, IteratorDeref)
 
     for (auto i = v.begin(); i != v.end(); ++i) {
         ASSERT_THAT(img_it_has_next(it), Not(Eq(0)));
-        img_it_deref(it);
-        ASSERT_THAT(img.row, Eq(i->first));
-        ASSERT_THAT(img.col, Eq(i->second));
+
+        for (int j = 0; j < img_pixel_size(&img.super); ++j) {
+            img_it_read(it, j);
+            ASSERT_THAT(img.row, Eq(i->first));
+            ASSERT_THAT(img.col, Eq(i->second));
+            ASSERT_THAT(img.cmp, Eq(j));
+        }
+        img_it_next(it);
+    }
+
+    ASSERT_THAT(img_it_has_next(it), Eq(0));
+    img_it_destroy(it);
+}
+
+TEST(ImgTest, IteratorWrite)
+{
+    struct img_mock img = {
+      .super = {
+        .ops = &success_ops,
+        .width = 3,
+        .height = 2,
+        .pixel_size = 4,
+      },
+      .destroy_called = false,
+      .save_called = false,
+      .row = 0,
+      .col = 0,
+    };
+    struct img_it *it = img_iterator((struct img_s *)&img);
+    std::vector<std::pair<size_t, size_t> > v{ { 0, 0 }, { 0, 1 }, { 0, 2 },
+                                               { 1, 0 }, { 1, 1 }, { 1, 2 } };
+
+    ASSERT_THAT(it, Not(IsNull()));
+
+    for (auto i = v.begin(); i != v.end(); ++i) {
+        ASSERT_THAT(img_it_has_next(it), Not(Eq(0)));
+
+        for (int j = 0; j < img_pixel_size(&img.super); ++j) {
+            img_it_write(it, j, j * 3);
+            ASSERT_THAT(img.row, Eq(i->first));
+            ASSERT_THAT(img.col, Eq(i->second));
+            ASSERT_THAT(img.cmp, Eq(j));
+            ASSERT_THAT(img.value, Eq(j * 3));
+        }
         img_it_next(it);
     }
 

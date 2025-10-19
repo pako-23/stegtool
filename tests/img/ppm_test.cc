@@ -4,6 +4,8 @@ extern "C" {
 }
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <fstream>
+#include <sstream>
 
 using namespace testing;
 
@@ -14,7 +16,23 @@ public:
             , width_{ 0 }
             , height_{ 0 }
     {
-        // TODO read image size
+        std::string line;
+        std::ifstream in(file, std::ios::in | std::ios::binary);
+
+        if (!in.is_open())
+            throw std::runtime_error("Could not open file: " +
+                                     std::string(file));
+
+        while (std::getline(in, line)) {
+            if (std::isdigit(line[0]))
+                break;
+        }
+
+        if (!std::isdigit(line[0]))
+            throw std::runtime_error("Invalid PPM image: " + std::string(file));
+
+        std::istringstream iss(line);
+        iss >> width_ >> height_;
     }
 
     inline const char *file(void) const
@@ -60,115 +78,118 @@ TEST(PPMTest, NewPPMImgInvalidMagic)
     fclose(fp);
 }
 
-// TEST_P(PPMTest, ImgFromFile)
-// {
-//     PPMTestImg param = GetParam();
-//     struct img_s *img = img_from_file(param.file());
+TEST_P(PPMTest, ImgFromFile)
+{
+    PPMTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
 
-//     ASSERT_THAT(img, Not(IsNull()));
-//     ASSERT_THAT(img_width(img), Eq(param.width()));
-//     ASSERT_THAT(img_height(img), Eq(param.height()));
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(param.width()));
+    ASSERT_THAT(img_height(img), Eq(param.height()));
+    ASSERT_THAT(img_pixel_size(img), 3);
 
-//     img_destroy(img);
-// }
+    img_destroy(img);
+}
 
-// TEST_P(PPMTest, NewPPMImg)
-// {
-//     FILE *fp;
-//     struct img_s *img;
-//     PPMTestImg param = GetParam();
+TEST_P(PPMTest, NewPPMImg)
+{
+    FILE *fp;
+    struct img_s *img;
+    PPMTestImg param = GetParam();
 
-//     fp = fopen(param.file(), "rb");
-//     ASSERT_THAT(fp, Not(IsNull()));
+    fp = fopen(param.file(), "rb");
+    ASSERT_THAT(fp, Not(IsNull()));
 
-//     img = (struct img_s *)ppm_img_new(fp);
-//     fclose(fp);
+    img = (struct img_s *)ppm_img_new(fp);
+    fclose(fp);
 
-//     ASSERT_THAT(img, Not(IsNull()));
-//     ASSERT_THAT(img_width(img), Eq(param.width()));
-//     ASSERT_THAT(img_height(img), Eq(param.height()));
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_width(img), Eq(param.width()));
+    ASSERT_THAT(img_height(img), Eq(param.height()));
+    ASSERT_THAT(img_pixel_size(img), 3);
 
-//     img_destroy(img);
-// }
+    img_destroy(img);
+}
 
-// TEST_P(PPMTest, PixelIteration)
-// {
-//     PPMTestImg param = GetParam();
-//     struct img_s *img = img_from_file(param.file());
-//     ASSERT_THAT(img, Not(IsNull()));
-//     size_t expected_pixels = img_width(img) * img_height(img);
+TEST_P(PPMTest, PixelIteration)
+{
+    PPMTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
+    ASSERT_THAT(img, Not(IsNull()));
+    size_t expected_pixels = img_width(img) * img_height(img);
 
-//     struct img_it *it = img_iterator(img);
-//     ASSERT_THAT(it, Not(IsNull()));
+    struct img_it *it = img_iterator(img);
+    ASSERT_THAT(it, Not(IsNull()));
 
-//     size_t pixels = 0;
-//     while (img_it_has_next(it)) {
-//         img_it_next(it);
-//         ++pixels;
-//     }
-//     img_it_destroy(it);
+    size_t pixels = 0;
+    while (img_it_has_next(it)) {
+        img_it_next(it);
+        ++pixels;
+    }
+    img_it_destroy(it);
 
-//     ASSERT_THAT(pixels, Eq(expected_pixels));
+    ASSERT_THAT(pixels, Eq(expected_pixels));
 
-//     img_destroy(img);
-// }
+    img_destroy(img);
+}
 
-// TEST_P(PPMTest, Save)
-// {
-//     PPMTestImg param = GetParam();
-//     struct img_s *img = img_from_file(param.file());
-//     struct img_s *simg;
-//     std::string saved = "saved-" + std::string{ param.file() };
-//     int pxlsz;
+TEST_P(PPMTest, Save)
+{
+    PPMTestImg param = GetParam();
+    struct img_s *img = img_from_file(param.file());
+    struct img_s *simg;
+    std::string saved = "saved-" + std::string{ param.file() };
+    int pxlsz;
 
-//     ASSERT_THAT(img, Not(IsNull()));
-//     ASSERT_THAT(img_save(img, saved.c_str()), Eq(0));
+    ASSERT_THAT(img, Not(IsNull()));
+    ASSERT_THAT(img_save(img, saved.c_str()), Eq(0));
 
-//     simg = img_from_file(saved.c_str());
-//     ASSERT_THAT(simg, Not(IsNull()));
-//     ASSERT_THAT(img_width(simg), Eq(img_width(img)));
-//     ASSERT_THAT(img_height(simg), Eq(img_height(img)));
-//     ASSERT_THAT(img_pixel_size(simg), Eq(img_pixel_size(img)));
-//     pxlsz = img_pixel_size(simg);
+    simg = img_from_file(saved.c_str());
+    ASSERT_THAT(simg, NotNull());
+    ASSERT_THAT(img_width(simg), Eq(img_width(img)));
+    ASSERT_THAT(img_height(simg), Eq(img_height(img)));
+    ASSERT_THAT(img_pixel_size(simg), Eq(img_pixel_size(img)));
+    pxlsz = img_pixel_size(simg);
 
-//     struct img_it *it = img_iterator(img);
-//     ASSERT_THAT(it, Not(IsNull()));
+    struct img_it *it = img_iterator(img);
+    ASSERT_THAT(it, Not(IsNull()));
 
-//     struct img_it *sit = img_iterator(simg);
-//     ASSERT_THAT(sit, Not(IsNull()));
+    struct img_it *sit = img_iterator(simg);
+    ASSERT_THAT(sit, Not(IsNull()));
 
-//     while (img_it_has_next(it)) {
-//         ASSERT_THAT(img_it_has_next(sit), Not(Eq(0)));
-//         uint8_t *pxl = img_it_deref(it);
-//         uint8_t *spxl = img_it_deref(sit);
+    while (img_it_has_next(it)) {
+        ASSERT_THAT(img_it_has_next(sit), Not(Eq(0)));
 
-//         for (int i = 0; i < pxlsz; ++i)
-//             ASSERT_THAT(spxl[i], Eq(pxl[i]));
+        for (int i = 0; i < pxlsz; ++i) {
+            int pxl = img_it_read(it, i);
+            int spxl = img_it_read(sit, i);
+            ASSERT_THAT(pxl, Eq(spxl));
+        }
 
-//         img_it_next(it);
-//         img_it_next(sit);
-//     }
+        img_it_next(it);
+        img_it_next(sit);
+    }
 
-//     img_destroy(img);
-//     img_destroy(simg);
-// }
+    img_destroy(img);
+    img_destroy(simg);
+}
 
-// INSTANTIATE_TEST_SUITE_P(PPMTest, PPMTest,
-//                          Values(PPMTestImg{ "blocks.binary.ppm" },
-//                                 PPMTestImg{ "feep.ascii.ppm" },
-//                                 PPMTestImg{ "fruit.binary.ppm" },
-//                                 PPMTestImg{ "haus.ascii.ppm" },
-//                                 PPMTestImg{ "haus.binary.ppm" },
-//                                 PPMTestImg{ "ppmex1.ascii.ppm" },
-//                                 PPMTestImg{ "ppmex255.ascii.ppm" },
-//                                 PPMTestImg{ "ppmex255.binary.ppm" },
-//                                 PPMTestImg{ "prague.binary.ppm" },
-//                                 PPMTestImg{ "squares.binary.ppm" }),
-//                          [](const testing::TestParamInfo<PPMTestImg> &info) {
-//                              std::string fname = info.param.file();
+INSTANTIATE_TEST_SUITE_P(PPMTest, PPMTest,
+                         Values(PPMTestImg{ "blocks.binary.ppm" },
+                                PPMTestImg{ "feep.ascii.ppm" },
+                                PPMTestImg{ "fruit.binary.ppm" },
+                                PPMTestImg{ "haus.ascii.ppm" },
+                                PPMTestImg{ "haus.binary.ppm" },
+                                PPMTestImg{ "ppmex1.ascii.ppm" },
+                                PPMTestImg{ "ppmex255.ascii.ppm" },
+                                PPMTestImg{ "ppmex255.binary.ppm" },
+                                PPMTestImg{ "prague.binary.ppm" },
+                                PPMTestImg{ "squares.binary.ppm" }),
+                         [](const testing::TestParamInfo<PPMTestImg> &info) {
+                             std::string fname = info.param.file();
 
-//                              fname = fname.substr(0, fname.find_last_of('.'));
-//                              std::replace(fname.begin(), fname.end(), '.', '_');
+                             fname = fname.substr(0, fname.find_last_of('.'));
+                             std::replace(fname.begin(), fname.end(), '.', '_');
 
-//                              return fname;
-//                          });
+                             return fname;
+                         });

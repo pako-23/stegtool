@@ -99,7 +99,12 @@ int img_it_has_next(const struct img_it *it)
     return it->row < img_height(it->img);
 }
 
-uint8_t *img_it_deref(const struct img_it *it)
+int img_it_read(const struct img_it *it, int cmp)
 {
-    return it->img->ops->pixel(it->img, it->row, it->col);
+    return it->img->ops->get_pixel(it->img, it->row, it->col, cmp);
+}
+
+void img_it_write(const struct img_it *it, int cmp, int value)
+{
+    it->img->ops->set_pixel(it->img, it->row, it->col, cmp, value);
 }

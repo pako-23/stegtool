@@ -93,7 +93,9 @@ INSTANTIATE_TEST_SUITE_P(
                "iftbbn2c16.png", "iftbbn3p08.png", "iftbgn2c16.png",
                "iftbgn3p08.png", "iftbrn2c08.png", "iftbwn0g16.png",
                "iftbwn3p08.png", "iftbyn3p08.png", "iftp0n0g08.png",
-               "iftp0n2c08.png", "iftp0n3p08.png", "iftp1n3p08.png"),
+               "iftp0n2c08.png", "iftp0n3p08.png", "iftp1n3p08.png",
+               "squares.binary.ppm", "prague.binary.ppm", "blocks.binary.ppm",
+               "fruit.binary.ppm"),
         [](const testing::TestParamInfo<const char *> &info) {
             std::string fname = info.param;
 

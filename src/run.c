@@ -32,6 +32,11 @@ int run(int argc, const char *argv[])
     }
 
     fname = argv[argc - 1];
+    if (strcmp(fname, "-h") == 0 || strcmp(fname, "--help") == 0) {
+        printf(HELP_FMT, argv[0]);
+        return EXIT_SUCCESS;
+    }
+
     int i = 1;
     while (i < argc - 1) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--decode") == 0) {
@@ -97,7 +102,7 @@ int run(int argc, const char *argv[])
         char *buf;
 
         if (sg_extract_len(img, &len) < 0) {
-            fprintf(stderr, "Failed to extract image length\n");
+            fprintf(stderr, "Failed to extract message length\n");
             err = EXIT_FAILURE;
             goto out;
         }

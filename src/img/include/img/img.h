@@ -12,7 +12,8 @@ struct img_ops_s {
     int (*init)(struct img_s *, FILE *);
     void (*destroy)(struct img_s *);
     int (*save)(const struct img_s *, FILE *);
-    uint8_t *(*pixel)(struct img_s *, size_t, size_t);
+    int (*get_pixel)(const struct img_s *, size_t, size_t, int);
+    void (*set_pixel)(struct img_s *, size_t, size_t, int, int);
 };
 
 struct img_s {
@@ -34,6 +35,7 @@ struct img_it *img_iterator(struct img_s *img);
 void img_it_destroy(struct img_it *it);
 void img_it_next(struct img_it *it);
 int img_it_has_next(const struct img_it *it);
-uint8_t *img_it_deref(const struct img_it *it);
+int img_it_read(const struct img_it *it, int cmp);
+void img_it_write(const struct img_it *it, int cmp, int value);
 
 #endif

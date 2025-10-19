@@ -14,7 +14,9 @@ struct png_img_s {
 static int init(struct img_s *img, FILE *fp);
 static void destroy(struct img_s *img);
 static int save(const struct img_s *img, FILE *fp);
-static uint8_t *pixel(struct img_s *img, size_t x, size_t y);
+static int get_pixel(const struct img_s *img, size_t row, size_t col, int cmp);
+static void set_pixel(struct img_s *img, size_t row, size_t col, int cmp,
+                      int value);
 
 const unsigned char png_magic[8] = { 0x89, 0x50, 0x4e, 0x47,
                                      0x0d, 0x0a, 0x1a, 0x0a };
@@ -23,7 +25,8 @@ static const struct img_ops_s ops = {
     .init = init,
     .destroy = destroy,
     .save = save,
-    .pixel = pixel,
+    .get_pixel = get_pixel,
+    .set_pixel = set_pixel,
 };
 
 struct png_img_s *png_img_new(FILE *fp)
@@ -186,9 +189,19 @@ static int save(const struct img_s *img, FILE *fp)
     return 0;
 }
 
-static uint8_t *pixel(struct img_s *img, size_t row, size_t col)
+static int get_pixel(const struct img_s *img, size_t row, size_t col, int cmp)
 {
     struct png_img_s *pngimg = (struct png_img_s *)img;
+    uint8_t *p = pngimg->rows[row] + col * img_pixel_size(img);
 
-    return pngimg->rows[row] + col * img_pixel_size(img);
+    return p[cmp];
+}
+
+static void set_pixel(struct img_s *img, size_t row, size_t col, int cmp,
+                      int value)
+{
+    struct png_img_s *pngimg = (struct png_img_s *)img;
+    uint8_t *p = pngimg->rows[row] + col * img_pixel_size(img);
+
+    p[cmp] = (uint8_t)value;
 }

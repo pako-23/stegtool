@@ -138,11 +138,12 @@ TEST_P(PNGTest, Save)
 
     while (img_it_has_next(it)) {
         ASSERT_THAT(img_it_has_next(sit), Not(Eq(0)));
-        uint8_t *pxl = img_it_deref(it);
-        uint8_t *spxl = img_it_deref(sit);
 
-        for (int i = 0; i < pxlsz; ++i)
-            ASSERT_THAT(spxl[i], Eq(pxl[i]));
+        for (int i = 0; i < pxlsz; ++i) {
+            int pxl = img_it_read(it, i);
+            int spxl = img_it_read(sit, i);
+            ASSERT_THAT(pxl, Eq(spxl));
+        }
 
         img_it_next(it);
         img_it_next(sit);
